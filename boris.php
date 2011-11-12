@@ -1,27 +1,40 @@
 <?php
 
-function phloop_is_returnable($input) {
+/**
+ * Boris: A tiny REPL for PHP.
+ *
+ * @author Chris Corbyn
+ */
+
+/*! Predicate to determine if the `return` keyword can be placed before the input */
+function boris_is_returnable($input) {
   $input = trim($input);
   return substr($input, -1) == ';' && !preg_match(
-    '/^(return|for|while|if|function|class|interface|abstract|switch|declare|throw|try)\b/i',
+    '/^(' .
+    'echo|exit|die|goto|global|include|include_one|require|require_once|list|' .
+    'return|do|for|while|if|function|namespace|class|interface|abstract|switch|' .
+    'declare|throw|try' .
+    ')\b/ix',
     $input
   );
 }
 
-function phloop_prepare_debug_stmt($input) {
-  if (phloop_is_returnable($input) && !preg_match('/\s*return/i', $input)) {
+/*! Quite simply places `return` before the input where possible */
+function boris_prepare_debug_stmt($input) {
+  if (boris_is_returnable($input) && !preg_match('/\s*return/i', $input)) {
     $input = sprintf('return %s', $input);
   }
 
   return $input;
 }
 
-function phloop_quote($token) {
+/*! PCRE quote a lexical token */
+function boris_quote($token) {
   return preg_quote($token, '/');
 }
 
 /*! Performs a shallow parse, extracting an array of full statements */
-function phloop_statements($buffer) {
+function boris_statements($buffer) {
   // TODO: Support heredoc
   $pairs = array(
     '('  => ')',
@@ -36,9 +49,10 @@ function phloop_statements($buffer) {
 
   $stmt       = '';
   $states     = array();
-  $initials   = '/^(' . implode('|', array_map('phloop_quote', array_keys($pairs))) . ')/';
+  $initials   = '/^(' . implode('|', array_map('boris_quote', array_keys($pairs))) . ')/';
   $statements = array();
 
+  // this looks scarier than it is... it common-fare state-based lexing
   while (strlen($buffer) > 0) {
     if (!$state = end($states)) { // initial state
       if (preg_match('/^\s+/', $buffer, $match)) {
@@ -77,49 +91,52 @@ function phloop_statements($buffer) {
   }
 
   if (trim($stmt) == '') {
-    $statements[] = phloop_prepare_debug_stmt(array_pop($statements));
+    var_dump($statements);
+    $statements[] = boris_prepare_debug_stmt(array_pop($statements));
     return $statements;
   }
 }
 
-function phloop_start_worker($phloop_sock) {
+/*! Invoked in a child process after forking; starts the REPL worker */
+function boris_start_worker($boris_sock) {
   for (;;) {
-    $phloop_input = '';
-    while ('' !== $phloop_buf = socket_read($phloop_sock, 8192, PHP_BINARY_READ)) {
-      $phloop_input .= $phloop_buf;
-      if (strlen($phloop_buf) < 8192) {
+    $boris_input = '';
+    while ('' !== $boris_buf = socket_read($boris_sock, 8192, PHP_BINARY_READ)) {
+      $boris_input .= $boris_buf;
+      if (strlen($boris_buf) < 8192) {
         break;
       }
     }
 
-    $phloop_ppid = posix_getpid();
-    $phloop_pid  = pcntl_fork();
+    $boris_ppid = posix_getpid();
+    $boris_pid  = pcntl_fork();
 
-    if ($phloop_pid < 0) {
+    if ($boris_pid < 0) {
       throw new RuntimeException('Failed to fork child labourer');
-    } elseif ($phloop_pid > 0) {
-      pcntl_waitpid($phloop_pid, $phloop_status);
+    } elseif ($boris_pid > 0) {
+      pcntl_waitpid($boris_pid, $boris_status); // stick around in case child exits
     } else {
-      var_dump(eval($phloop_input));
-      posix_kill($phloop_ppid, SIGTERM);
+      var_dump(eval($boris_input));
+      posix_kill($boris_ppid, SIGTERM);
       pcntl_signal_dispatch();
     }
 
-    socket_write($phloop_sock, "\0");
+    socket_write($boris_sock, "\0"); // notify main process we're done
   }
 }
 
-function phloop_start_repl($sock) {
+/*! Invoked in the main process after forking the REPL worker; accepts user input  */
+function boris_start_repl($sock) {
   $buf = '';
   for (;;) {
-    if (false === $line = readline($buf == '' ? 'phloop> ' : '     *> ')) {
+    if (false === $line = readline($buf == '' ? 'boris> ' : '     *> ')) {
       echo "\n";
       exit(0); // ctrl-d
     }
 
     $buf .= sprintf("%s\n", $line);
 
-    if ($statements = phloop_statements($buf)) {
+    if ($statements = boris_statements($buf)) {
       $buf = '';
       foreach ($statements as $stmt) {
         if (!(socket_write($sock, $stmt) && socket_read($sock, 1))) {
@@ -130,9 +147,10 @@ function phloop_start_repl($sock) {
   }
 }
 
-function phloop_start() {
+/*! Start the REPL and Readline client; never returns */
+function boris_start() {
   if (!is_callable('pcntl_fork')) {
-    throw new RuntimeException('The pcntl extension must be installed to use phloop');
+    throw new RuntimeException('The pcntl extension must be installed to use boris');
   }
 
   if (!socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $socks)) {
@@ -142,12 +160,10 @@ function phloop_start() {
   $pid = pcntl_fork();
 
   if ($pid > 0) {
-    phloop_start_repl($socks[1]);
+    boris_start_repl($socks[1]);
   } elseif ($pid < 0) {
     throw new RuntimeException('Failed to fork child process');
   } else {
-    phloop_start_worker($socks[0]);
+    boris_start_worker($socks[0]);
   }
 }
-
-phloop_start();
