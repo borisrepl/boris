@@ -33,6 +33,21 @@ function boris_quote($token) {
   return preg_quote($token, '/');
 }
 
+/*! Joins things like adjacent if..else and try..catch into single constructs */
+function boris_combine_related_statements($statements) {
+  $combined = array();
+
+  foreach ($statements as $scope) {
+    if (preg_match('/^\s*(else|elseif|catch)\b/i', $scope)) {
+      $combined[] = ((string) array_pop($combined)) . $scope;
+    } else {
+      $combined[] = $scope;
+    }
+  }
+
+  return $combined;
+}
+
 /*! Performs a shallow parse, extracting an array of full statements */
 function boris_statements($buffer) {
   // TODO: Support heredoc
@@ -52,7 +67,7 @@ function boris_statements($buffer) {
   $initials   = '/^(' . implode('|', array_map('boris_quote', array_keys($pairs))) . ')/';
   $statements = array();
 
-  // this looks scarier than it is...
+  // this looks scarier than it is (it's deliberately procedural)...
   while (strlen($buffer) > 0) {
     $state      = end($states);
     $terminator = $state ? '/^.*?' . preg_quote($pairs[$state], '/') . '/s' : null;
@@ -89,7 +104,8 @@ function boris_statements($buffer) {
   }
 
   if (!empty($statements) && trim($stmt) === '' && strlen($buffer) == 0) {
-    $statements[] = boris_prepare_debug_stmt(array_pop($statements));
+    $statements   = boris_combine_related_statements($statements);
+    $statements []= boris_prepare_debug_stmt(array_pop($statements));
     return $statements;
   }
 }
