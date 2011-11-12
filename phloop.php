@@ -3,7 +3,7 @@
 function phloop_is_returnable($input) {
   $input = trim($input);
   return substr($input, -1) == ';' && !preg_match(
-    '/^return|for|while|if|function|class|interface|abstract|switch|declare|throw|try/i',
+    '/^(return|for|while|if|function|class|interface|abstract|switch|declare|throw|try)\b/i',
     $input
   );
 }
@@ -16,11 +16,69 @@ function phloop_prepare_debug_stmt($input) {
   return $input;
 }
 
-function phloop_is_complete_statement($input) {
-  if (substr(trim($input), -1) != ';') {
-    return false;
-  } else {
-    return true;
+function phloop_quote($token) {
+  return preg_quote($token, '/');
+}
+
+/*! Performs a shallow parse, extracting an array of full statements */
+function phloop_statements($buffer) {
+  // TODO: Support heredoc
+  $pairs = array(
+    '('  => ')',
+    '{'  => '}',
+    '['  => ']',
+    '"'  => '"',
+    "'"  => "'",
+    '//' => "\n",
+    '#'  => "\n",
+    '/*' => '*/'
+  );
+
+  $stmt       = '';
+  $states     = array();
+  $initials   = '/^(' . implode('|', array_map('phloop_quote', array_keys($pairs))) . ')/';
+  $statements = array();
+
+  while (strlen($buffer) > 0) {
+    if (!$state = end($states)) { // initial state
+      if (preg_match('/^\s+/', $buffer, $match)) {
+        $stmt .= $match[0];
+        $buffer = substr($buffer, strlen($match[0]));
+      } elseif (preg_match($initials, $buffer, $match)) {
+        $stmt .= $match[0];
+        $buffer = substr($buffer, strlen($match[0]));
+        $states[] = $match[0];
+      } else {
+        $chr = substr($buffer, 0, 1);
+        $stmt .= $chr;
+        $buffer = substr($buffer, 1);
+        if ($chr == ';') {
+          $statements[] = $stmt;
+          $stmt = '';
+        }
+      }
+    } else {
+      // escaped in-string char
+      if (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
+        $stmt .= $match[0];
+        $buffer = substr($buffer, strlen($match[0]));
+      } elseif (preg_match('/^.*?' . preg_quote($pairs[$state], '/') . '/s', $buffer, $match)) {
+        $stmt .= $match[0];
+        $buffer = substr($buffer, strlen($match[0]));
+        array_pop($states);
+        if ($state == '{' && empty($states)) {
+          $statements[] = $stmt;
+          $stmt = '';
+        }
+      } else {
+        break; // unconsumed input
+      }
+    }
+  }
+
+  if (trim($stmt) == '') {
+    $statements[] = phloop_prepare_debug_stmt(array_pop($statements));
+    return $statements;
   }
 }
 
@@ -41,13 +99,13 @@ function phloop_start_worker($phloop_sock) {
       throw new RuntimeException('Failed to fork child labourer');
     } elseif ($phloop_pid > 0) {
       pcntl_waitpid($phloop_pid, $phloop_status);
-      socket_write($phloop_sock, "\0"); // we only get here if child errors
     } else {
       var_dump(eval($phloop_input));
       posix_kill($phloop_ppid, SIGTERM);
       pcntl_signal_dispatch();
-      socket_write($phloop_sock, "\0");
     }
+
+    socket_write($phloop_sock, "\0");
   }
 }
 
@@ -61,11 +119,12 @@ function phloop_start_repl($sock) {
 
     $buf .= sprintf("%s\n", $line);
 
-    if (phloop_is_complete_statement($buf)) {
-      $stmt = phloop_prepare_debug_stmt($buf);
+    if ($statements = phloop_statements($buf)) {
       $buf = '';
-      if (!(socket_write($sock, $stmt) && socket_read($sock, 1))) {
-        throw new RuntimeException('Bus error: failed to write data');
+      foreach ($statements as $stmt) {
+        if (!(socket_write($sock, $stmt) && socket_read($sock, 1))) {
+          throw new RuntimeException('Socket error: failed to write data');
+        }
       }
     }
   }
