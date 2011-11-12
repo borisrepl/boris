@@ -12,14 +12,15 @@ build up a solution to a problem.
 
 ## Why?
 
-I'm in the process of transitioning away from PHP and into Ruby.  I have come
-to find PHP's lack of a real REPL to be frustrating and was not able to find an
-existing implementation that was complete.  Boris weighs in at around 200 lines
-of fairly straightforward code.
+I'm in the process of transitioning away from PHP to Ruby.  I have come to find
+PHP's lack of a real REPL to be frustrating and was not able to find an existing
+implementation that was complete.  Boris weighs in at around 200 lines of fairly
+straightforward code.
 
 ## Usage
 
-I'll probably put this in PEAR, but right now you can get Boris from github:
+I'll probably make this available via PEAR, but right now you can get Boris
+from github:
 
     git clone git://github.com/d11wtq/boris.git
     cd boris
@@ -50,7 +51,7 @@ The constructor parameter is optional and changes the prompt.
 
 ## What about PHP's interactive mode?
 
-PHP's interactive mode does not print the result of evaluating expressions, but
+PHP's interactive mode does not print the result of evaluating expressions and
 more importantly, it exits if you type something that produces a fatal error,
 such as invoking a function/method that does not exist, or an uncaught
 exception.  Boris is designed to be robust, like other REPLs, so you can

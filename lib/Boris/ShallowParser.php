@@ -88,7 +88,7 @@ class Boris_ShallowParser {
     $combined = array();
 
     foreach ($statements as $scope) {
-      if (preg_match('/^\s*(else|elseif|catch)\b/i', $scope)) {
+      if (preg_match('/^\s*(;|else\b|elseif\b|catch\b)/i', $scope)) {
         $combined[] = ((string) array_pop($combined)) . $scope;
       } else {
         $combined[] = $scope;
