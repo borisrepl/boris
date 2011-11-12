@@ -55,7 +55,7 @@ function boris_statements($buffer) {
   // this looks scarier than it is...
   while (strlen($buffer) > 0) {
     $state      = end($states);
-    $terminator = $state ? '/^.*?' . preg_quote($pairs[$state]) . '/s' : null;
+    $terminator = $state ? '/^.*?' . preg_quote($pairs[$state], '/') . '/s' : null;
 
     // escaped char
     if (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
