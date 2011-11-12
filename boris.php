@@ -88,7 +88,7 @@ function boris_statements($buffer) {
     }
   }
 
-  if (trim($stmt) == '') {
+  if (!empty($statements) && trim($stmt) === '' && strlen($buffer) == 0) {
     $statements[] = boris_prepare_debug_stmt(array_pop($statements));
     return $statements;
   }
@@ -118,7 +118,9 @@ function boris_start_worker($boris_sock) {
       pcntl_signal_dispatch();
     }
 
-    socket_write($boris_sock, "\0"); // notify main process we're done
+    if (!socket_write($boris_sock, "\0")) { // notify main process we're done
+      throw new RuntimeException('Socket error: failed to write data');
+    }
   }
 }
 
@@ -136,8 +138,11 @@ function boris_start_repl($sock) {
     if ($statements = boris_statements($buf)) {
       $buf = '';
       foreach ($statements as $stmt) {
-        if (!(socket_write($sock, $stmt) && socket_read($sock, 1))) {
+        if (false === $written = socket_write($sock, $stmt)) {
           throw new RuntimeException('Socket error: failed to write data');
+        }
+        if ($written > 0) {
+          socket_read($sock, 1);
         }
       }
     }
