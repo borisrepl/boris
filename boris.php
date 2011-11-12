@@ -149,13 +149,21 @@ function boris_start_worker($boris_sock) {
 
 /*! Invoked in the main process after forking the REPL worker; accepts user input  */
 function boris_start_repl($sock) {
+  $history_file = getenv('HOME') . '/.boris_history';
+  readline_read_history($history_file);
+
   declare(ticks = 1);
   pcntl_signal(SIGCHLD, SIG_IGN);
 
   $buf = '';
+
   for (;;) {
     if (false === $line = readline($buf == '' ? 'boris> ' : '    *> ')) {
       $buf = 'exit(0);'; // ctrl-d acts like exit
+    }
+
+    if (strlen($line) > 0) {
+      readline_add_history($line);
     }
 
     $buf .= sprintf("%s\n", $line);
@@ -169,6 +177,7 @@ function boris_start_repl($sock) {
         if ($written > 0) {
           $status = socket_read($sock, 1);
           if ($status == "\1") {
+            readline_write_history($history_file);
             echo "\n";
             exit(0);
           }

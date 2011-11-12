@@ -14,7 +14,7 @@ build up a solution to a problem.
 
 I'm in the process of transitioning away from PHP and into Ruby.  I have come
 to find PHP's lack of a real REPL to be frustrating and was not able to find an
-existing implementation that was complete.  Boris weighs in at under 200 lines
+existing implementation that was complete.  Boris weighs in at around 200 lines
 of (procedural) code.
 
 ## Usage
@@ -36,7 +36,7 @@ output is dumped with `var_dump()`.
     int(2)
     boris> "x + y = " . ($x + $y);
     string(9) "x + y = 3"
-    boris>
+    boris> exit;
 
 You can also use Boris as part of a larger project (e.g. with your application
 environment loaded).  Just include "boris.php" and call `boris_start();`.
@@ -46,9 +46,13 @@ environment loaded).  Just include "boris.php" and call `boris_start();`.
 PHP's interactive mode does not print the result of evaluating expressions, but
 more importantly, it exits if you type something that produces a fatal error,
 such as invoking a function/method that does not exist, or an uncaught
-exception.
+exception.  Boris is designed to be robust, like other REPLs, so you can
+experiment with things that you know may error, without losing everything.
 
 ## Architecture Overview
+
+This section of the README only applies to those curious enough to read the
+code.
 
 Boris will only work on POSIX systems (Linux and Mac OS).  This is primarily
 because it depends on the ability to fork. If anybody knows how to make this
@@ -80,13 +84,17 @@ input then kills the parent, then the loop continues inside the child, waiting
 for the next input.
 
 While the child is evaluating the input, the parent waits. The parent is
-expecting the worst—that the child will die—at which point the parent continues
-looping and does not terminate.  The state remains unchanged.
+expecting the worst—that the child will die abnormally—at which point the parent
+continues waiting for input and does not terminate.  The state remains unchanged.
 
-The readline part of Boris is much more straightforward.  It takes your input,
-performs a (very) shallow parse on it, in order to decide if it needs to wait
-for further input, or evaluate the input (one statement at a time) it has
-received.  This is always the top-level parent process.
+After each expression is evaluated, the worker reports back to the main process
+with a status code of 0 (keep running) or 1 (terminate).
+
+The main process (readline) of Boris is much more straightforward.  It takes
+your input, performs a (very) shallow parse on it, in order to decide if it
+needs to wait for further input, or evaluate the input (one statement at a time)
+it has received.  If the worker reports back with a status code of 1, the process
+terminates, otherwise the next iteration of the loop is entered.
 
 ## Will it work with...?
 
