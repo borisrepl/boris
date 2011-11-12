@@ -7,6 +7,9 @@
  */
 class Boris_ReadlineClient {
   private $_socket;
+  private $_prompt;
+  private $_historyFile;
+  private $_clear = false;
 
   /**
    * Create a new ReadlineClient using $socket for communication.
@@ -30,12 +33,19 @@ class Boris_ReadlineClient {
 
     declare(ticks = 1);
     pcntl_signal(SIGCHLD, SIG_IGN);
+    pcntl_signal(SIGINT, array($this, 'clear'));
 
     $parser = new Boris_ShallowParser();
     $buf = '';
 
     for (;;) {
+      $this->_clear = false;
       $line = readline($buf == '' ? $prompt : str_pad('*> ', strlen($prompt), ' ', STR_PAD_LEFT));
+
+      if ($this->_clear) {
+        $buf = '';
+        continue;
+      }
 
       if (false === $line) {
         $buf = 'exit(0);'; // ctrl-d acts like exit
@@ -64,5 +74,9 @@ class Boris_ReadlineClient {
         }
       }
     }
+  }
+
+  public function clear() {
+    $this->_clear = true;
   }
 }
