@@ -52,46 +52,43 @@ function boris_statements($buffer) {
   $initials   = '/^(' . implode('|', array_map('boris_quote', array_keys($pairs))) . ')/';
   $statements = array();
 
-  // this looks scarier than it is... it common-fare state-based lexing
+  // this looks scarier than it is...
   while (strlen($buffer) > 0) {
-    if (!$state = end($states)) { // initial state
-      if (preg_match('/^\s+/', $buffer, $match)) {
-        $stmt .= $match[0];
-        $buffer = substr($buffer, strlen($match[0]));
-      } elseif (preg_match($initials, $buffer, $match)) {
-        $stmt .= $match[0];
-        $buffer = substr($buffer, strlen($match[0]));
-        $states[] = $match[0];
-      } else {
-        $chr = substr($buffer, 0, 1);
-        $stmt .= $chr;
-        $buffer = substr($buffer, 1);
-        if ($chr == ';') {
-          $statements[] = $stmt;
-          $stmt = '';
-        }
-      }
-    } else {
-      // escaped in-string char
-      if (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
-        $stmt .= $match[0];
-        $buffer = substr($buffer, strlen($match[0]));
-      } elseif (preg_match('/^.*?' . preg_quote($pairs[$state], '/') . '/s', $buffer, $match)) {
+    $state      = end($states);
+    $terminator = $state ? '/^.*?' . preg_quote($pairs[$state]) . '/s' : null;
+
+    // escaped char
+    if (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
+      $stmt .= $match[0];
+      $buffer = substr($buffer, strlen($match[0]));
+    } elseif ($state == '"' || $state == "'" || $state == '//' || $state == '#' || $state == '/*') {
+      if (preg_match($terminator, $buffer, $match)) {
         $stmt .= $match[0];
         $buffer = substr($buffer, strlen($match[0]));
         array_pop($states);
-        if ($state == '{' && empty($states)) {
-          $statements[] = $stmt;
-          $stmt = '';
-        }
       } else {
-        break; // unconsumed input
+        break;
+      }
+    } elseif (preg_match($initials, $buffer, $match)) {
+      $stmt .= $match[0];
+      $buffer = substr($buffer, strlen($match[0]));
+      $states[] = $match[0];
+    } else {
+      $chr = substr($buffer, 0, 1);
+      $stmt .= $chr;
+      $buffer = substr($buffer, 1);
+      if ($state && $chr == $pairs[$state]) {
+        array_pop($states);
+      }
+
+      if (empty($states) && ($chr == ';' || $chr == '}')) {
+        $statements[] = $stmt;
+        $stmt = '';
       }
     }
   }
 
   if (trim($stmt) == '') {
-    var_dump($statements);
     $statements[] = boris_prepare_debug_stmt(array_pop($statements));
     return $statements;
   }
@@ -129,7 +126,7 @@ function boris_start_worker($boris_sock) {
 function boris_start_repl($sock) {
   $buf = '';
   for (;;) {
-    if (false === $line = readline($buf == '' ? 'boris> ' : '     *> ')) {
+    if (false === $line = readline($buf == '' ? 'boris> ' : '    *> ')) {
       echo "\n";
       exit(0); // ctrl-d
     }
