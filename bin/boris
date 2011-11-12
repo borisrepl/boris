@@ -1,0 +1,7 @@
+#!/usr/bin/env php
+<?php
+
+require dirname(__FILE__) . '/../lib/Boris.php';
+
+$boris = new Boris();
+$boris->start();

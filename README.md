@@ -15,7 +15,7 @@ build up a solution to a problem.
 I'm in the process of transitioning away from PHP and into Ruby.  I have come
 to find PHP's lack of a real REPL to be frustrating and was not able to find an
 existing implementation that was complete.  Boris weighs in at around 200 lines
-of (procedural) code.
+of fairly straightforward code.
 
 ## Usage
 
@@ -23,7 +23,7 @@ I'll probably put this in PEAR, but right now you can get Boris from github:
 
     git clone git://github.com/d11wtq/boris.git
     cd boris
-    ./boris
+    ./bin/boris
 
 When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
 this prompt is evaluated.  If an expression spans multiple lines, Boris will
@@ -39,7 +39,14 @@ output is dumped with `var_dump()`.
     boris> exit;
 
 You can also use Boris as part of a larger project (e.g. with your application
-environment loaded).  Just include "boris.php" and call `boris_start();`.
+environment loaded).
+
+    require_once 'lib/Boris.php';
+
+    $boris = new Boris('myapp> ');
+    $boris->start();
+
+The constructor parameter is optional and changes the prompt.
 
 ## What about PHP's interactive mode?
 
@@ -108,9 +115,3 @@ Boris depends on the following PHP features:
 It has been written in PHP 5.3, but should work in PHP 5.2.  It will not work in
 PHP 4.  There's no chance it can work on Windows, due to the dependency on POSIX
 features.
-
-## Tests?
-
-Sorry, I just put this together in an afternoon, deliberately keeping it minimal.
-It's literally a couple of hundred lines of code, with less than 10 functions,
-containined in a single file.
