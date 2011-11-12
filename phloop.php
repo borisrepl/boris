@@ -24,44 +24,70 @@ function phloop_is_complete_statement($input) {
   }
 }
 
+function phloop_start_worker($phloop_sock) {
+  for (;;) {
+    $phloop_input = '';
+    while ('' !== $phloop_buf = socket_read($phloop_sock, 8192, PHP_BINARY_READ)) {
+      $phloop_input .= $phloop_buf;
+      if (strlen($phloop_buf) < 8192) {
+        break;
+      }
+    }
+
+    $phloop_ppid = posix_getpid();
+    $phloop_pid  = pcntl_fork();
+
+    if ($phloop_pid < 0) {
+      throw new RuntimeException('Failed to fork child labourer');
+    } elseif ($phloop_pid > 0) {
+      pcntl_waitpid($phloop_pid, $phloop_status);
+      socket_write($phloop_sock, "\0"); // we only get here if child errors
+    } else {
+      var_dump(eval($phloop_input));
+      posix_kill($phloop_ppid, SIGTERM);
+      pcntl_signal_dispatch();
+      socket_write($phloop_sock, "\0");
+    }
+  }
+}
+
+function phloop_start_repl($sock) {
+  $buf = '';
+  for (;;) {
+    if (false === $line = readline($buf == '' ? 'phloop> ' : '     *> ')) {
+      echo "\n";
+      exit(0); // ctrl-d
+    }
+
+    $buf .= sprintf("%s\n", $line);
+
+    if (phloop_is_complete_statement($buf)) {
+      $stmt = phloop_prepare_debug_stmt($buf);
+      $buf = '';
+      if (!(socket_write($sock, $stmt) && socket_read($sock, 1))) {
+        throw new RuntimeException('Bus error: failed to write data');
+      }
+    }
+  }
+}
+
 function phloop_start() {
   if (!is_callable('pcntl_fork')) {
     throw new RuntimeException('The pcntl extension must be installed to use phloop');
   }
 
-  /*
-   Note that:
-     Namespacing phloop variables is important in this scope.
-     Maintaining the user's variables between REPL cycles is important.
-   */
+  if (!socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $socks)) {
+    throw new RuntimeException('Failed to create socket pair');
+  }
 
-  $phloop_buffer = '';
+  $pid = pcntl_fork();
 
-  for(;;) {
-    if (false === $phloop_line = readline($phloop_buffer == '' ? 'phloop> ' : '     *> ')) {
-      echo "\n";
-      exit(0); // ctrl-d
-    }
-
-    $phloop_buffer .= $phloop_line;
-
-    if (phloop_is_complete_statement($phloop_buffer)) {
-      $phloop_stmt = phloop_prepare_debug_stmt($phloop_buffer);
-
-      $phloop_pid = pcntl_fork();
-      if ($phloop_pid == 0) {
-        var_dump(eval($phloop_stmt));
-      } elseif ($phloop_pid < 0) {
-        printf("phloop error: failed to fork child\n");
-      } else {
-        pcntl_waitpid($phloop_pid, $phloop_status);
-        if ($phloop_status != 65280) { // Fatal error
-          exit(0);
-        }
-      }
-
-      $phloop_buffer = '';
-    }
+  if ($pid > 0) {
+    phloop_start_repl($socks[1]);
+  } elseif ($pid < 0) {
+    throw new RuntimeException('Failed to fork child process');
+  } else {
+    phloop_start_worker($socks[0]);
   }
 }
 
