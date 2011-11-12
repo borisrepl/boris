@@ -127,7 +127,14 @@ function boris_start_worker($boris_sock) {
     if ($boris_pid < 0) {
       throw new RuntimeException('Failed to fork child labourer');
     } elseif ($boris_pid > 0) {
-      pcntl_waitpid($boris_pid, $boris_status); // stick around in case child exits
+      pcntl_waitpid($boris_pid, $boris_status);
+
+      if ($boris_status != 65280) { // if exited cleanly
+        if (!socket_write($boris_sock, "\1")) {
+          throw new RuntimeException('Socket error: failed to write data');
+        }
+        exit(0);
+      }
     } else {
       var_dump(eval($boris_input));
       posix_kill($boris_ppid, SIGTERM);
@@ -142,11 +149,13 @@ function boris_start_worker($boris_sock) {
 
 /*! Invoked in the main process after forking the REPL worker; accepts user input  */
 function boris_start_repl($sock) {
+  declare(ticks = 1);
+  pcntl_signal(SIGCHLD, SIG_IGN);
+
   $buf = '';
   for (;;) {
     if (false === $line = readline($buf == '' ? 'boris> ' : '    *> ')) {
-      echo "\n";
-      exit(0); // ctrl-d
+      $buf = 'exit(0);'; // ctrl-d acts like exit
     }
 
     $buf .= sprintf("%s\n", $line);
@@ -158,7 +167,11 @@ function boris_start_repl($sock) {
           throw new RuntimeException('Socket error: failed to write data');
         }
         if ($written > 0) {
-          socket_read($sock, 1);
+          $status = socket_read($sock, 1);
+          if ($status == "\1") {
+            echo "\n";
+            exit(0);
+          }
         }
       }
     }
