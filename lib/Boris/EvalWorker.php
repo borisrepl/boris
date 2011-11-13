@@ -54,8 +54,18 @@ class Boris_EvalWorker {
           $__response = self::FAILED;
         }
       } else {
+        $__pid = posix_getpid();
+
         $__result = eval($__input);
+
+        if (posix_getpid() != $__pid) {
+          // whatever the user entered caused a forked child
+          // (totally valid, but we don't want that child to loop and wait for input)
+          exit(0);
+        }
+
         if (preg_match('/\s*return\b/i', $__input)) {
+          echo " → ";
           var_dump($__result);
         }
         $this->_expungeOldWorker();
