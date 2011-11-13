@@ -56,7 +56,10 @@ class Boris_EvalWorker {
       } else {
         $__pid = posix_getpid();
 
-        $__result = eval($__input);
+        declare(ticks = 1) {
+          pcntl_signal(SIGCHLD, SIG_IGN);
+          $__result = eval($__input);
+        }
 
         if (posix_getpid() != $__pid) {
           // whatever the user entered caused a forked child
