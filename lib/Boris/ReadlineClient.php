@@ -71,6 +71,8 @@ class Boris_ReadlineClient {
               readline_write_history($historyFile);
               echo "\n";
               exit(0);
+            } elseif ($status == Boris_EvalWorker::FAILED) {
+              break;
             }
           }
         }

@@ -7,6 +7,7 @@ class Boris_EvalWorker {
   const ABNORMAL_EXIT = 65280;
   const DONE   = "\0";
   const EXITED = "\1";
+  const FAILED = "\2";
 
   private $_socket;
   private $_ppid;
@@ -37,6 +38,8 @@ class Boris_EvalWorker {
         }
       }
 
+      $__response = self::DONE;
+
       $this->_ppid = posix_getpid();
       $this->_pid  = pcntl_fork();
 
@@ -46,18 +49,24 @@ class Boris_EvalWorker {
         pcntl_waitpid($this->_pid, $__status);
 
         if ($__status != self::ABNORMAL_EXIT) {
-          if (!socket_write($this->_socket, self::EXITED)) {
-            throw new RuntimeException('Socket error: failed to write data');
-          }
-          exit(0);
+          $__response = self::EXITED;
+        } else {
+          $__response = self::FAILED;
         }
       } else {
-        var_dump(eval($__input));
+        $__result = eval($__input);
+        if (preg_match('/\s*return\b/i', $__input)) {
+          var_dump($__result);
+        }
         $this->_expungeOldWorker();
       }
 
-      if (!socket_write($this->_socket, self::DONE)) {
+      if (!socket_write($this->_socket, $__response)) {
         throw new RuntimeException('Socket error: failed to write data');
+      }
+
+      if ($__response == self::EXITED) {
+        exit(0);
       }
     }
   }
