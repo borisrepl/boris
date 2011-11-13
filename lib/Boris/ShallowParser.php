@@ -59,7 +59,6 @@ class Boris_ShallowParser {
     if (!empty($result->statements) && trim($result->stmt) === '' && strlen($result->buffer) == 0) {
       $this->_combineStatements($result);
       $this->_prepareForDebug($result);
-      var_dump($result->statements);
       return $result->statements;
     }
   }
