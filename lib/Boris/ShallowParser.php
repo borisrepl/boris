@@ -59,6 +59,7 @@ class Boris_ShallowParser {
     if (!empty($result->statements) && trim($result->stmt) === '' && strlen($result->buffer) == 0) {
       $this->_combineStatements($result);
       $this->_prepareForDebug($result);
+      var_dump($result->statements);
       return $result->statements;
     }
   }
@@ -91,10 +92,33 @@ class Boris_ShallowParser {
   }
 
   private function _combineStatements($result) {
+    $neighbours = array(
+      array('if',  'elseif'),
+      array('if',  'else'),
+      array('try', 'catch'),
+      array('do',  'while')
+    );
+
     $combined = array();
 
-    foreach ($result->statements as $scope) {
-      if (preg_match('/^\s*(;|else\b|elseif\b|catch\b)/i', $scope)) {
+    while ($scope = array_shift($result->statements)) {
+      $paired  = false;
+      $sibling = end($combined);
+
+      if (preg_match('/^\s*;/', $scope)) {
+        $paired = true;
+      } elseif ($sibling) {
+        foreach ($neighbours as $pair) {
+          list($left, $right) = $pair;
+
+          if (preg_match('/^\s*' . $left . '\b/i', $sibling) && preg_match('/^\s*' . $right . '\b/i', $scope)) {
+            $paired = true;
+            break;
+          }
+        }
+      }
+
+      if ($paired) {
         $combined[] = ((string) array_pop($combined)) . $scope;
       } else {
         $combined[] = $scope;
@@ -124,7 +148,7 @@ class Boris_ShallowParser {
 
   private function _scanWsp($result) {
     if (preg_match('/^\s+/', $result->buffer, $match)) {
-      if (!empty($result->statements)) {
+      if (!empty($result->statements) && $result->stmt === '') {
         $result->statements[] = array_pop($result->statements) . $match[0];
       } else {
         $result->stmt .= $match[0];
