@@ -200,7 +200,7 @@ class Boris_ShallowParser {
       '/^(' .
       'echo|print|exit|die|goto|global|include|include_one|require|require_once|list|' .
       'return|do|for|while|if|function|namespace|class|interface|abstract|switch|' .
-      'declare|throw|try' .
+      'declare|throw|try|unset' .
       ')\b/i',
       $input
     );
