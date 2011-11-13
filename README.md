@@ -14,8 +14,8 @@ build up a solution to a problem.
 
 I'm in the process of transitioning away from PHP to Ruby.  I have come to find
 PHP's lack of a real REPL to be frustrating and was not able to find an existing
-implementation that was complete.  Boris weighs in at around 200 lines of fairly
-straightforward code.
+implementation that was complete.  Boris weighs in at a few hundred lines of
+fairly straightforward code.
 
 ## Usage
 
