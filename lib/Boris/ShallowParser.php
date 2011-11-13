@@ -32,76 +32,34 @@ class Boris_ShallowParser {
    * @return array
    */
   public function statements($buffer) {
-    $stmt       = '';
-    $states     = array();
-    $statements = array();
+    $result = $this->_createResult($buffer);
 
-    // this looks scarier than it is (it's deliberately procedural)...
-    while (strlen($buffer) > 0) {
-      $state      = end($states);
-      $terminator = $state ? '/^.*?' . preg_quote($this->_pairs[$state], '/') . '/s' : null;
+    while (strlen($result->buffer) > 0) {
+      $this->_resetResult($result);
 
-      // FIXME: Refactor this heredoc/nowdoc handling... it has a lot in common with other strings
-      if ($state == '<<<') {
-        if (preg_match('/^([\'"]?)([a-z_][a-z0-9_]*)\\1/i', $buffer, $match)) {
-          $docId = $match[2];
-          $stmt .= $match[0];
-          $buffer = substr($buffer, strlen($match[0]));
-
-          if (preg_match('/^(.*?\n' . $docId . ');?\n/s', $buffer, $match)) {
-            $stmt .= $match[1];
-            $buffer = substr($buffer, strlen($match[1]));
-            array_pop($states);
-          } else {
-            break;
-          }
-        } else {
-          array_pop($states); // not actually here-doc
+      if ($result->state == '<<<') {
+        if (!$this->_initializeHeredoc($result)) {
           continue;
         }
       }
-      // escaped char
-      elseif (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
-        $stmt .= $match[0];
-        $buffer = substr($buffer, strlen($match[0]));
-      } elseif ($state == '"' || $state == "'" || $state == '//' || $state == '#' || $state == '/*') {
-        if (preg_match($terminator, $buffer, $match)) {
-          $stmt .= $match[0];
-          $buffer = substr($buffer, strlen($match[0]));
-          array_pop($states);
-        } else {
+
+      $rules = array('_scanEscapedChar', '_scanRegion', '_scanStateEntrant', '_scanWsp', '_scanChar');
+
+      foreach ($rules as $method) {
+        if ($this->$method($result)) {
           break;
         }
-      } elseif (preg_match($this->_initials, $buffer, $match)) {
-        $stmt .= $match[0];
-        $buffer = substr($buffer, strlen($match[0]));
-        $states[] = $match[0];
-      } elseif (preg_match('/^\s+/', $buffer, $match)) {
-        if (!empty($statements)) {
-          $statements[] = array_pop($statements) . $match[0];
-        } else {
-          $stmt .= $match[0];
-        }
-        $buffer = substr($buffer, strlen($match[0]));
-      } else {
-        $chr = substr($buffer, 0, 1);
-        $stmt .= $chr;
-        $buffer = substr($buffer, 1);
-        if ($state && $chr == $this->_pairs[$state]) {
-          array_pop($states);
-        }
+      }
 
-        if (empty($states) && ($chr == ';' || $chr == '}')) {
-          $statements[] = "$stmt";
-          $stmt = '';
-        }
+      if ($result->stop) {
+        break;
       }
     }
 
-    if (!empty($statements) && trim($stmt) === '' && strlen($buffer) == 0) {
-      $statements   = $this->_combine($statements);
-      $statements []= $this->_prepareDebugStmt(array_pop($statements));
-      return $statements;
+    if (!empty($result->statements) && trim($result->stmt) === '' && strlen($result->buffer) == 0) {
+      $this->_combineStatements($result);
+      $this->_prepareForDebug($result);
+      return $result->statements;
     }
   }
 
@@ -111,10 +69,31 @@ class Boris_ShallowParser {
 
   // -- Private Methods
 
-  private function _combine($statements) {
+  private function _createResult($buffer) {
+    $result = new stdClass();
+    $result->buffer     = $buffer;
+    $result->stmt       = '';
+    $result->state      =  null;
+    $result->states     = array();
+    $result->statements = array();
+    $result->stop       = false;
+
+    return $result;
+  }
+
+  private function _resetResult($result) {
+    $result->stop       = false;
+    $result->state      = end($result->states);
+    $result->terminator = $result->state
+      ? '/^(.*?' . preg_quote($this->_pairs[$result->state], '/') . ')/s'
+      : null
+      ;
+  }
+
+  private function _combineStatements($result) {
     $combined = array();
 
-    foreach ($statements as $scope) {
+    foreach ($result->statements as $scope) {
       if (preg_match('/^\s*(;|else\b|elseif\b|catch\b)/i', $scope)) {
         $combined[] = ((string) array_pop($combined)) . $scope;
       } else {
@@ -122,7 +101,97 @@ class Boris_ShallowParser {
       }
     }
 
-    return $combined;
+    $result->statements = $combined;
+  }
+
+  private function _prepareForDebug($result) {
+    $result->statements []= $this->_prepareDebugStmt(array_pop($result->statements));
+  }
+
+  private function _initializeHeredoc($result) {
+    if (preg_match('/^([\'"]?)([a-z_][a-z0-9_]*)\\1/i', $result->buffer, $match)) {
+      $docId = $match[2];
+      $result->stmt .= $match[0];
+      $result->buffer = substr($result->buffer, strlen($match[0]));
+
+      $result->terminator = '/^(.*?\n' . $docId . ');?\n/s';
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private function _scanWsp($result) {
+    if (preg_match('/^\s+/', $result->buffer, $match)) {
+      if (!empty($result->statements)) {
+        $result->statements[] = array_pop($result->statements) . $match[0];
+      } else {
+        $result->stmt .= $match[0];
+      }
+      $result->buffer = substr($result->buffer, strlen($match[0]));
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private function _scanEscapedChar($result) {
+    if (($result->state == '"' || $result->state == "'")
+        && preg_match('/^[^' . $result->state . ']*?\\\\./s', $result->buffer, $match)) {
+
+      $result->stmt .= $match[0];
+      $result->buffer = substr($result->buffer, strlen($match[0]));
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private function _scanRegion($result) {
+    if (in_array($result->state, array('"', "'", '<<<', '//', '#', '/*'))) {
+      if (preg_match($result->terminator, $result->buffer, $match)) {
+        $result->stmt .= $match[1];
+        $result->buffer = substr($result->buffer, strlen($match[1]));
+        array_pop($result->states);
+      } else {
+        $result->stop = true;
+      }
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private function _scanStateEntrant($result) {
+    if (preg_match($this->_initials, $result->buffer, $match)) {
+      $result->stmt .= $match[0];
+      $result->buffer = substr($result->buffer, strlen($match[0]));
+      $result->states[] = $match[0];
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private function _scanChar($result) {
+    $chr = substr($result->buffer, 0, 1);
+    $result->stmt .= $chr;
+    $result->buffer = substr($result->buffer, 1);
+    if ($result->state && $chr == $this->_pairs[$result->state]) {
+      array_pop($result->states);
+    }
+
+    if (empty($result->states) && ($chr == ';' || $chr == '}')) {
+      $result->statements[] = $result->stmt;
+      $result->stmt = '';
+    }
+
+    return true;
   }
 
   private function _isReturnable($input) {
@@ -144,5 +213,4 @@ class Boris_ShallowParser {
 
     return $input;
   }
-
 }
