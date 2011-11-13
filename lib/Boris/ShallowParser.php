@@ -207,7 +207,7 @@ class Boris_ShallowParser {
   }
 
   private function _prepareDebugStmt($input) {
-    if ($this->_isReturnable($input) && !preg_match('/\s*return/i', $input)) {
+    if ($this->_isReturnable($input) && !preg_match('/^\s*return/i', $input)) {
       $input = sprintf('return %s', $input);
     }
 
