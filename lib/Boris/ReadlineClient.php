@@ -33,7 +33,8 @@ class Boris_ReadlineClient {
 
     declare(ticks = 1);
     pcntl_signal(SIGCHLD, SIG_IGN);
-    pcntl_signal(SIGINT, array($this, 'clear'));
+    // the following works, but the socket seems to be dead after ctrl-c
+    //pcntl_signal(SIGINT, array($this, 'clear'));
 
     $parser = new Boris_ShallowParser();
     $buf = '';
@@ -63,6 +64,7 @@ class Boris_ReadlineClient {
           if (false === $written = socket_write($this->_socket, $stmt)) {
             throw new RuntimeException('Socket error: failed to write data');
           }
+
           if ($written > 0) {
             $status = socket_read($this->_socket, 1);
             if ($status == Boris_EvalWorker::EXITED) {
