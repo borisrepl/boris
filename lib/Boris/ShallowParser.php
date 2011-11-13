@@ -5,14 +5,15 @@
  */
 class Boris_ShallowParser {
   private $_pairs = array(
-    '('  => ')',
-    '{'  => '}',
-    '['  => ']',
-    '"'  => '"',
-    "'"  => "'",
-    '//' => "\n",
-    '#'  => "\n",
-    '/*' => '*/'
+    '('   => ')',
+    '{'   => '}',
+    '['   => ']',
+    '"'   => '"',
+    "'"   => "'",
+    '//'  => "\n",
+    '#'   => "\n",
+    '/*'  => '*/',
+    '<<<' => '_heredoc_special_case_'
   );
 
   private $_initials;
@@ -40,8 +41,27 @@ class Boris_ShallowParser {
       $state      = end($states);
       $terminator = $state ? '/^.*?' . preg_quote($this->_pairs[$state], '/') . '/s' : null;
 
+      // FIXME: Refactor this heredoc/nowdoc handling... it has a lot in common with other strings
+      if ($state == '<<<') {
+        if (preg_match('/^([\'"]?)([a-z_][a-z0-9_]*)\\1/i', $buffer, $match)) {
+          $docId = $match[2];
+          $stmt .= $match[0];
+          $buffer = substr($buffer, strlen($match[0]));
+
+          if (preg_match('/^(.*?\n' . $docId . ');?\n/s', $buffer, $match)) {
+            $stmt .= $match[1];
+            $buffer = substr($buffer, strlen($match[1]));
+            array_pop($states);
+          } else {
+            break;
+          }
+        } else {
+          array_pop($states); // not actually here-doc
+          continue;
+        }
+      }
       // escaped char
-      if (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
+      elseif (($state == '"' || $state == "'") && preg_match('/^[^' . $state . ']*?\\\\./s', $buffer, $match)) {
         $stmt .= $match[0];
         $buffer = substr($buffer, strlen($match[0]));
       } elseif ($state == '"' || $state == "'" || $state == '//' || $state == '#' || $state == '/*') {
@@ -56,6 +76,13 @@ class Boris_ShallowParser {
         $stmt .= $match[0];
         $buffer = substr($buffer, strlen($match[0]));
         $states[] = $match[0];
+      } elseif (preg_match('/^\s+/', $buffer, $match)) {
+        if (!empty($statements)) {
+          $statements[] = array_pop($statements) . $match[0];
+        } else {
+          $stmt .= $match[0];
+        }
+        $buffer = substr($buffer, strlen($match[0]));
       } else {
         $chr = substr($buffer, 0, 1);
         $stmt .= $chr;
@@ -65,7 +92,7 @@ class Boris_ShallowParser {
         }
 
         if (empty($states) && ($chr == ';' || $chr == '}')) {
-          $statements[] = $stmt;
+          $statements[] = "$stmt";
           $stmt = '';
         }
       }
