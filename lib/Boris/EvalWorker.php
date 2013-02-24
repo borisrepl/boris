@@ -1,9 +1,11 @@
 <?php
 
+namespace Boris;
+
 /**
  * EvalWorker is reponsible for evaluating PHP expressions in forked processes.
  */
-class Boris_EvalWorker {
+class EvalWorker {
   const ABNORMAL_EXIT = 65280;
   const DONE   = "\0";
   const EXITED = "\1";

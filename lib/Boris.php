@@ -1,8 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/Boris/ShallowParser.php';
-require_once dirname(__FILE__) . '/Boris/EvalWorker.php';
-require_once dirname(__FILE__) . '/Boris/ReadlineClient.php';
+namespace Boris;
 
 /**
  * Boris is a tiny REPL for PHP.

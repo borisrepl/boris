@@ -1,11 +1,13 @@
 <?php
 
+namespace Boris;
+
 /**
  * The Readline client is what the user spends their time entering text into.
  *
  * Input is collected and sent to {@link Boris_EvalWorker} for processing.
  */
-class Boris_ReadlineClient {
+class ReadlineClient {
   private $_socket;
   private $_prompt;
   private $_historyFile;

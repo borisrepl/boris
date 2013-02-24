@@ -1,9 +1,11 @@
 <?php
 
+namespace Boris;
+
 /**
  * The ShallowParser takes whatever is currently buffered and chunks it into individual statements.
  */
-class Boris_ShallowParser {
+class ShallowParser {
   private $_pairs = array(
     '('   => ')',
     '{'   => '}',

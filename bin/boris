@@ -3,5 +3,5 @@
 
 require dirname(__FILE__) . '/../lib/Boris.php';
 
-$boris = new Boris();
+$boris = new \Boris\Boris();
 $boris->start();
