@@ -12,6 +12,7 @@ class EvalWorker {
   const FAILED = "\2";
 
   private $_socket;
+  private $_exports;
   private $_ppid;
   private $_pid;
 
@@ -19,9 +20,11 @@ class EvalWorker {
    * Create a new worker using the given socket for communication.
    *
    * @param resource $socket
+   * @param array $exports variables to export to the eval scope
    */
-  public function __construct($socket) {
+  public function __construct($socket, $exports=array()) {
     $this->_socket = $socket;
+    $this->_exports = $exports;
   }
 
   /**
@@ -30,6 +33,8 @@ class EvalWorker {
    * This method never returns.
    */
   public function start() {
+    extract($this->_exports);
+
     /* Note the naming of the local variables due to shared scope with the user here */
     for (;;) {
       $__input = '';
