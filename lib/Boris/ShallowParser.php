@@ -1,9 +1,11 @@
 <?php
 
+namespace Boris;
+
 /**
  * The ShallowParser takes whatever is currently buffered and chunks it into individual statements.
  */
-class Boris_ShallowParser {
+class ShallowParser {
   private $_pairs = array(
     '('   => ')',
     '{'   => '}',
@@ -70,7 +72,7 @@ class Boris_ShallowParser {
   // -- Private Methods
 
   private function _createResult($buffer) {
-    $result = new stdClass();
+    $result = new \stdClass();
     $result->buffer     = $buffer;
     $result->stmt       = '';
     $result->state      =  null;

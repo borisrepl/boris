@@ -1,8 +1,6 @@
 <?php
 
-require_once dirname(__FILE__) . '/Boris/ShallowParser.php';
-require_once dirname(__FILE__) . '/Boris/EvalWorker.php';
-require_once dirname(__FILE__) . '/Boris/ReadlineClient.php';
+namespace Boris;
 
 /**
  * Boris is a tiny REPL for PHP.
@@ -32,18 +30,18 @@ class Boris {
    */
   public function start() {
     if (!socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $socks)) {
-      throw new RuntimeException('Failed to create socket pair');
+      throw new \RuntimeException('Failed to create socket pair');
     }
 
     $pid = pcntl_fork();
 
     if ($pid > 0) {
-      $client = new Boris_ReadlineClient($socks[1]);
+      $client = new ReadlineClient($socks[1]);
       $client->start($this->_prompt, $this->_historyFile);
     } elseif ($pid < 0) {
-      throw new RuntimeException('Failed to fork child process');
+      throw new \RuntimeException('Failed to fork child process');
     } else {
-      $worker = new Boris_EvalWorker($socks[0]);
+      $worker = new EvalWorker($socks[0]);
       $worker->start();
     }
   }

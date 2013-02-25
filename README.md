@@ -44,9 +44,9 @@ output is dumped with `var_dump()`.
 You can also use Boris as part of a larger project (e.g. with your application
 environment loaded).
 
-    require_once 'lib/Boris.php';
+    require_once 'lib/boris.php';
 
-    $boris = new Boris('myapp> ');
+    $boris = new \Boris\Boris('myapp> ');
     $boris->start();
 
 The constructor parameter is optional and changes the prompt.

@@ -1,9 +1,11 @@
 <?php
 
+namespace Boris;
+
 /**
  * EvalWorker is reponsible for evaluating PHP expressions in forked processes.
  */
-class Boris_EvalWorker {
+class EvalWorker {
   const ABNORMAL_EXIT = 65280;
   const DONE   = "\0";
   const EXITED = "\1";
@@ -44,7 +46,7 @@ class Boris_EvalWorker {
       $this->_pid  = pcntl_fork();
 
       if ($this->_pid < 0) {
-        throw new RuntimeException('Failed to fork child labourer');
+        throw new \RuntimeException('Failed to fork child labourer');
       } elseif ($this->_pid > 0) {
         pcntl_waitpid($this->_pid, $__status);
 
@@ -72,7 +74,7 @@ class Boris_EvalWorker {
       }
 
       if (!socket_write($this->_socket, $__response)) {
-        throw new RuntimeException('Socket error: failed to write data');
+        throw new \RuntimeException('Socket error: failed to write data');
       }
 
       if ($__response == self::EXITED) {
