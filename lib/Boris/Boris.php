@@ -8,6 +8,7 @@ namespace Boris;
 class Boris {
   private $_prompt;
   private $_historyFile;
+  private $_exports;
 
   /**
    * Create a new REPL, which consists of an evaluation worker and a readline client.
