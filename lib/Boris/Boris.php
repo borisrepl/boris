@@ -8,6 +8,7 @@ namespace Boris;
 class Boris {
   private $_prompt;
   private $_historyFile;
+  private $_exports;
 
   /**
    * Create a new REPL, which consists of an evaluation worker and a readline client.
@@ -15,12 +16,13 @@ class Boris {
    * @param string $prompt, optional
    * @param string $historyFile, optional
    */
-  public function __construct($prompt = 'boris> ', $historyFile = null) {
+  public function __construct($prompt = 'boris> ', $historyFile = null, $exports=array()) {
     $this->_prompt      = $prompt;
     $this->_historyFile = $historyFile
       ? $historyFile
       : sprintf('%s/.boris_history', getenv('HOME'))
       ;
+    $this->_exports = $exports;
   }
 
   /**
@@ -41,7 +43,7 @@ class Boris {
     } elseif ($pid < 0) {
       throw new \RuntimeException('Failed to fork child process');
     } else {
-      $worker = new EvalWorker($socks[0]);
+      $worker = new EvalWorker($socks[0], $this->_exports);
       $worker->start();
     }
   }
