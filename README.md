@@ -26,7 +26,6 @@ from github:
 
     git clone git://github.com/d11wtq/boris.git
     cd boris
-    composer install
     ./bin/boris
 
 When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
