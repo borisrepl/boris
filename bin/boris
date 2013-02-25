@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-require_once __DIR__.'/../lib/boris.php';
+require_once __DIR__.'/../vendor/autoload.php';
 
 $boris = new \Boris\Boris();
 $boris->start();

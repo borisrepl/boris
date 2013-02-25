@@ -21,7 +21,7 @@ fairly straightforward code.
 
 ## Usage
 
-I'll probably make this available via PEAR, but right now you can get Boris
+I'll probably make this available via Composer/Packagist, but right now you can get Boris
 from github:
 
     git clone git://github.com/d11wtq/boris.git
