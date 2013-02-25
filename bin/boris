@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 
-require dirname(__FILE__) . '/../lib/Boris.php';
+require_once __DIR__.'/../lib/boris.php';
 
 $boris = new \Boris\Boris();
 $boris->start();

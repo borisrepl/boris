@@ -5,7 +5,7 @@ namespace Boris;
 /**
  * The Readline client is what the user spends their time entering text into.
  *
- * Input is collected and sent to {@link Boris_EvalWorker} for processing.
+ * Input is collected and sent to {@link \Boris\EvalWorker} for processing.
  */
 class ReadlineClient {
   private $_socket;
@@ -38,7 +38,7 @@ class ReadlineClient {
     // the following works, but the socket seems to be dead after ctrl-c
     //pcntl_signal(SIGINT, array($this, 'clear'));
 
-    $parser = new Boris_ShallowParser();
+    $parser = new ShallowParser();
     $buf = '';
 
     for (;;) {
@@ -64,16 +64,16 @@ class ReadlineClient {
         $buf = '';
         foreach ($statements as $stmt) {
           if (false === $written = socket_write($this->_socket, $stmt)) {
-            throw new RuntimeException('Socket error: failed to write data');
+            throw new \RuntimeException('Socket error: failed to write data');
           }
 
           if ($written > 0) {
             $status = socket_read($this->_socket, 1);
-            if ($status == Boris_EvalWorker::EXITED) {
+            if ($status == EvalWorker::EXITED) {
               readline_write_history($historyFile);
               echo "\n";
               exit(0);
-            } elseif ($status == Boris_EvalWorker::FAILED) {
+            } elseif ($status == EvalWorker::FAILED) {
               break;
             }
           }

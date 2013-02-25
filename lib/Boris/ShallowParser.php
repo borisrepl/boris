@@ -72,7 +72,7 @@ class ShallowParser {
   // -- Private Methods
 
   private function _createResult($buffer) {
-    $result = new stdClass();
+    $result = new \stdClass();
     $result->buffer     = $buffer;
     $result->stmt       = '';
     $result->state      =  null;

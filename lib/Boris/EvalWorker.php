@@ -46,7 +46,7 @@ class EvalWorker {
       $this->_pid  = pcntl_fork();
 
       if ($this->_pid < 0) {
-        throw new RuntimeException('Failed to fork child labourer');
+        throw new \RuntimeException('Failed to fork child labourer');
       } elseif ($this->_pid > 0) {
         pcntl_waitpid($this->_pid, $__status);
 
@@ -74,7 +74,7 @@ class EvalWorker {
       }
 
       if (!socket_write($this->_socket, $__response)) {
-        throw new RuntimeException('Socket error: failed to write data');
+        throw new \RuntimeException('Socket error: failed to write data');
       }
 
       if ($__response == self::EXITED) {
