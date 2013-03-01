@@ -30,8 +30,9 @@ from github:
 
 When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
 this prompt is evaluated.  If an expression spans multiple lines, Boris will
-collect the input and then evaluate the expression when it is complete.  The
-output is dumped with `var_dump()`.
+collect the input and then evaluate the expression when it is complete. Press
+CTRL-C to clear a multi-line input buffer if you make a mistake. The output
+is dumped with `var_dump()`.
 
     boris> $x = 1;
     int(1)
@@ -40,6 +41,26 @@ output is dumped with `var_dump()`.
     boris> "x + y = " . ($x + $y);
     string(9) "x + y = 3"
     boris> exit;
+
+You can also use CTRL-D to exit the REPL.
+
+Long-running operations, such as infinite loops, may be cancelled at any time
+without quitting the REPL, by using CTRL-C while the operation is running.
+
+    boris> for ($i = 0; ; ++$i) {
+        *>   if ($i % 2 == 0) printf("Tick\n");
+        *>   else             printf("Tock\n");
+        *>   sleep(1);
+        *> }
+    Tick
+    Tock
+    Tick
+    Tock
+    Tick
+    Tock
+    Tick
+    ^CCancelling...
+    boris>
 
 You can also use Boris as part of a larger project (e.g. with your application
 environment loaded).
@@ -117,4 +138,4 @@ Boris depends on the following PHP features:
   - PHP >= 5.3
 
 There's no chance it can work on Windows, due to the dependency on POSIX
-features.
+features (the code is almost entirely dependant on POSIX).
