@@ -35,8 +35,7 @@ class ReadlineClient {
 
     declare(ticks = 1);
     pcntl_signal(SIGCHLD, SIG_IGN);
-    // the following works, but the socket seems to be dead after ctrl-c
-    //pcntl_signal(SIGINT, array($this, 'clear'));
+    pcntl_signal(SIGINT, array($this, 'clear'), true);
 
     $parser = new ShallowParser();
     $buf = '';
@@ -82,7 +81,11 @@ class ReadlineClient {
     }
   }
 
+  /**
+   * Clear the input buffer.
+   */
   public function clear() {
+    // FIXME: I'd love to have this send \r to readline so it puts the user on a blank line
     $this->_clear = true;
   }
 }

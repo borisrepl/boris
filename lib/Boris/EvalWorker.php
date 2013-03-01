@@ -15,6 +15,7 @@ class EvalWorker {
   private $_exports;
   private $_ppid;
   private $_pid;
+  private $_cancelled;
 
   /**
    * Create a new worker using the given socket for communication.
@@ -37,6 +38,12 @@ class EvalWorker {
 
     /* Note the naming of the local variables due to shared scope with the user here */
     for (;;) {
+      declare(ticks = 1);
+      // don't exit on ctrl-c
+      pcntl_signal(SIGINT, SIG_IGN, true);
+
+      $this->_cancelled = false;
+
       $__input = '';
       while ('' !== $__buf = socket_read($this->_socket, 8192, PHP_BINARY_READ)) {
         $__input .= $__buf;
@@ -53,14 +60,18 @@ class EvalWorker {
       if ($this->_pid < 0) {
         throw new \RuntimeException('Failed to fork child labourer');
       } elseif ($this->_pid > 0) {
+        // kill the child on ctrl-c
+        pcntl_signal(SIGINT, array($this, 'cancelOperation'), true);
         pcntl_waitpid($this->_pid, $__status);
 
-        if ($__status != self::ABNORMAL_EXIT) {
+        if (!$this->_cancelled && $__status != self::ABNORMAL_EXIT) {
           $__response = self::EXITED;
         } else {
           $__response = self::FAILED;
         }
       } else {
+        // undo ctrl-c signal handling ready for user code execution
+        pcntl_signal(SIGINT, SIG_DFL, true);
         $__pid = posix_getpid();
 
         $__result = eval($__input);
@@ -86,6 +97,16 @@ class EvalWorker {
         exit(0);
       }
     }
+  }
+
+  /**
+   * While a child process is running, terminate it immediately.
+   */
+  public function cancelOperation() {
+    printf("Cancelling...\n");
+    $this->_cancelled = true;
+    posix_kill($this->_pid, SIGKILL);
+    pcntl_signal_dispatch();
   }
 
   // -- Private Methods

@@ -31,6 +31,9 @@ class Boris {
    * This method never returns.
    */
   public function start() {
+    declare(ticks = 1);
+    pcntl_signal(SIGINT, SIG_IGN, true);
+
     if (!socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $socks)) {
       throw new \RuntimeException('Failed to create socket pair');
     }
