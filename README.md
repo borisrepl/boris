@@ -74,7 +74,7 @@ environment loaded).
 The constructor parameter is optional and changes the prompt.
 
 If you want to pass local variables straight into Boris (e.g. parts of your
-application), you can do that too:
+application), you can do that too (thanks to @dhotston):
 
     $boris = new \Boris\Boris('myapp> ', null, array('appContext'=>$appContext));
     $boris->start();
