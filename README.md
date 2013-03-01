@@ -114,7 +114,7 @@ Boris depends on the following PHP features:
   - The PCNTL functions
   - The POSIX functions
   - The Socket functions
+  - PHP >= 5.3
 
-It has been written in PHP 5.3, but should work in PHP 5.2.  It will not work in
-PHP 4.  There's no chance it can work on Windows, due to the dependency on POSIX
+There's no chance it can work on Windows, due to the dependency on POSIX
 features.
