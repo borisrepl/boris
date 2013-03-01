@@ -1,6 +1,6 @@
 # Boris: A tiny little, but robust REPL for PHP
 
-<iframe width="420" height="315" src="http://www.youtube.com/embed/xB5fJoX-dws" frameborder="0" allowfullscreen></iframe>
+Here's a 5 minute [video demonstration on YouTube](http://www.youtube.com/watch?v=xB5fJoX-dws).
 
 Python has one. Ruby has one. Clojure has one. Now PHP has one too. Boris is
 PHP's missing REPL (read-eval-print loop), allowing developers to experiment
