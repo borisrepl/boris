@@ -1,6 +1,6 @@
-# Boris: A tiny little REPL for PHP
+# Boris: A tiny little, but robust REPL for PHP
 
-Quick video demo: http://www.youtube.com/watch?v=FDDZHAvzHvQ
+<iframe width="420" height="315" src="http://www.youtube.com/embed/xB5fJoX-dws" frameborder="0" allowfullscreen></iframe>
 
 Python has one. Ruby has one. Clojure has one. Now PHP has one too. Boris is
 PHP's missing REPL (read-eval-print loop), allowing developers to experiment
@@ -21,12 +21,13 @@ fairly straightforward code.
 
 ## Usage
 
-I'll probably make this available via Composer/Packagist, but right now you can get Boris
-from github:
+Boris is available via Packagist, or you can use it directly from this repo:
 
     git clone git://github.com/d11wtq/boris.git
     cd boris
     ./bin/boris
+
+**Pro Tip**: Add boris to your $PATH for easy access.
 
 When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
 this prompt is evaluated.  If an expression spans multiple lines, Boris will
@@ -65,12 +66,20 @@ without quitting the REPL, by using CTRL-C while the operation is running.
 You can also use Boris as part of a larger project (e.g. with your application
 environment loaded).
 
-    require_once 'lib/boris.php';
+    require_once 'vendor/autoload.php';
 
     $boris = new \Boris\Boris('myapp> ');
     $boris->start();
 
 The constructor parameter is optional and changes the prompt.
+
+If you want to pass local variables straight into Boris (e.g. parts of your
+application), you can do that too:
+
+    $boris = new \Boris\Boris('myapp> ', null, array('appContext'=>$appContext));
+    $boris->start();
+
+In the above example, $appContext will be present inside the REPL.
 
 ## What about PHP's interactive mode?
 
@@ -83,13 +92,14 @@ experiment with things that you know may error, without losing everything.
 ## Architecture Overview
 
 This section of the README only applies to those curious enough to read the
-code.
+code. Boris is quite different to other PHP REPLs, because it deals with fatal
+errors (not Exceptions, fatal errors) in a special way.
 
 Boris will only work on POSIX systems (Linux and Mac OS).  This is primarily
-because it depends on the ability to fork. If anybody knows how to make this
-approach work in Windows, do submit a pull request.
+because it depends on the ability to fork, but also because it plays with signals
+a lot too.
 
-Boris is composed of two parts:
+Boris is made up of two parts:
 
   1. A REPL worker process, which receives expressions to evaluate and print
   2. A readline client, which simply takes your input, sends it to the worker
@@ -131,11 +141,16 @@ terminates, otherwise the next iteration of the loop is entered.
 
 Boris depends on the following PHP features:
 
+  - PHP >= 5.3
   - The Readline functions
   - The PCNTL functions
   - The POSIX functions
   - The Socket functions
-  - PHP >= 5.3
 
 There's no chance it can work on Windows, due to the dependency on POSIX
 features (the code is almost entirely dependant on POSIX).
+
+## Copyright & Licensing
+
+Boris is written and maintained by Chris Corbyn (@d11wtq). You can use the
+code as you see fit. See the LICENSE file for details.
