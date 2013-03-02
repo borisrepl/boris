@@ -93,33 +93,10 @@ class ShallowParser {
   }
 
   private function _combineStatements($result) {
-    $neighbours = array(
-      array('if',  'elseif'),
-      array('if',  'else'),
-      array('try', 'catch'),
-      array('do',  'while')
-    );
-
     $combined = array();
 
-    while ($scope = array_shift($result->statements)) {
-      $paired  = false;
-      $sibling = end($combined);
-
-      if (preg_match('/^\s*;/', $scope)) {
-        $paired = true;
-      } elseif ($sibling) {
-        foreach ($neighbours as $pair) {
-          list($left, $right) = $pair;
-
-          if (preg_match('/^\s*' . $left . '\b/i', $sibling) && preg_match('/^\s*' . $right . '\b/i', $scope)) {
-            $paired = true;
-            break;
-          }
-        }
-      }
-
-      if ($paired) {
+    foreach ($result->statements as $scope) {
+      if (substr(trim($scope), -1) != ';') {
         $combined[] = ((string) array_pop($combined)) . $scope;
       } else {
         $combined[] = $scope;
