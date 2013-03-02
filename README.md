@@ -8,9 +8,9 @@ with PHP code in the terminal in an interactive manner.  If you make a mistake,
 it doesn't matter, Boris will report the error and stand to attention for
 further input.
 
-Everything you enter into Boris is evaluated and the result `var_dump()`'d
-for inspection.  State is maintained between inputs, allowing you to gradually
-build up a solution to a problem.
+Everything you enter into Boris is evaluated and the result inspected so you
+can understand what is happening.  State is maintained between inputs, allowing
+you to gradually build up a solution to a problem.
 
 ## Why?
 
@@ -33,7 +33,7 @@ When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
 this prompt is evaluated.  If an expression spans multiple lines, Boris will
 collect the input and then evaluate the expression when it is complete. Press
 CTRL-C to clear a multi-line input buffer if you make a mistake. The output
-is dumped with `var_dump()`.
+is dumped with `var_dump()` by default.
 
     boris> $x = 1;
     int(1)
@@ -44,6 +44,8 @@ is dumped with `var_dump()`.
     boris> exit;
 
 You can also use CTRL-D to exit the REPL.
+
+### Cancelling long-running operations
 
 Long-running operations, such as infinite loops, may be cancelled at any time
 without quitting the REPL, by using CTRL-C while the operation is running.
@@ -63,6 +65,8 @@ without quitting the REPL, by using CTRL-C while the operation is running.
     ^CCancelling...
     boris>
 
+### Using Boris with your application loaded
+
 You can also use Boris as part of a larger project (e.g. with your application
 environment loaded).
 
@@ -76,10 +80,33 @@ The constructor parameter is optional and changes the prompt.
 If you want to pass local variables straight into Boris (e.g. parts of your
 application), you can do that too (thanks to @dhotston):
 
-    $boris = new \Boris\Boris('myapp> ', null, array('appContext'=>$appContext));
+    $boris = new \Boris\Boris('myapp> ');
+    $boris->setLocal(array('appContext' => $appContext));
     $boris->start();
 
 In the above example, $appContext will be present inside the REPL.
+
+### Customizing the output
+
+After each expression you enter, Boris passes it through an Inspector to get a
+representation that is useful for debugging. The default is just to var_dump() the
+value, but you can change this behaviour.
+
+Any object that has an `inspect($variable)` method may be used for this purpose.
+
+    $boris->setInspector(new BlinkInspector());
+
+Boris comes with two alternatives out of the box:
+
+  * \Boris\DumpInspector, which uses var_dump() and is the default
+  * \Boris\ExportInspector, which uses var_export()
+
+Note that you can change this from inside the REPL too:
+
+    boris> $this->setInspector(new \Boris\ExportInspector());
+    -> NULL
+    boris> "Test";
+    -> 'Test'
 
 ## What about PHP's interactive mode?
 

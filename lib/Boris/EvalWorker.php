@@ -12,20 +12,38 @@ class EvalWorker {
   const FAILED = "\2";
 
   private $_socket;
-  private $_exports;
+  private $_exports = array();
   private $_ppid;
   private $_pid;
   private $_cancelled;
+  private $_inspector;
 
   /**
    * Create a new worker using the given socket for communication.
    *
    * @param resource $socket
-   * @param array $exports variables to export to the eval scope
    */
-  public function __construct($socket, $exports=array()) {
-    $this->_socket = $socket;
+  public function __construct($socket) {
+    $this->_socket    = $socket;
+    $this->_inspector = new DumpInspector();
+  }
+
+  /**
+   * Set local variables to be placed in the workers's scope.
+   *
+   * @param array $exports
+   */
+  public function setExports($exports) {
     $this->_exports = $exports;
+  }
+
+  /**
+   * Set an Inspector object for Boris to ouput return values with.
+   *
+   * @param object $inspector any object the responds to inspect($v)
+   */
+  public function setInspector($inspector) {
+    $this->_inspector = $inspector;
   }
 
   /**
@@ -83,8 +101,7 @@ class EvalWorker {
         }
 
         if (preg_match('/\s*return\b/i', $__input)) {
-          echo " → ";
-          var_dump($__result);
+					printf(" → %s\n", $this->_inspector->inspect($__result));
         }
         $this->_expungeOldWorker();
       }
