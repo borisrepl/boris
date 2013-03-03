@@ -70,7 +70,7 @@ without quitting the REPL, by using CTRL-C while the operation is running.
 You can also use Boris as part of a larger project (e.g. with your application
 environment loaded).
 
-    require_once 'vendor/autoload.php';
+    require_once 'lib/autoload.php';
 
     $boris = new \Boris\Boris('myapp> ');
     $boris->start();
