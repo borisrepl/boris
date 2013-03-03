@@ -172,7 +172,6 @@ Boris depends on the following PHP features:
   - The Readline functions
   - The PCNTL functions
   - The POSIX functions
-  - The Socket functions
 
 There's no chance it can work on Windows, due to the dependency on POSIX
 features (the code is almost entirely dependant on POSIX).
