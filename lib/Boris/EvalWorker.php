@@ -145,7 +145,7 @@ class EvalWorker {
       if ($read) {
         return stream_get_contents($read[0]);
       } else if ($except) {
-        throw new \UnexpectedValueException("Socket was closed");
+        throw new \UnexpectedValueException("Socket error: closed");
       }
     }
   }
