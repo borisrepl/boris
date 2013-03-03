@@ -8,7 +8,7 @@ namespace Boris;
  * EvalWorker is responsible for evaluating PHP expressions in forked processes.
  */
 class EvalWorker {
-  const ABNORMAL_EXIT = 65280;
+  const ABNORMAL_EXIT = 255;
   const DONE   = "\0";
   const EXITED = "\1";
   const FAILED = "\2";
@@ -84,7 +84,7 @@ class EvalWorker {
         pcntl_signal(SIGINT, array($this, 'cancelOperation'), true);
         pcntl_waitpid($this->_pid, $__status);
 
-        if (!$this->_cancelled && $__status != self::ABNORMAL_EXIT) {
+        if (!$this->_cancelled && $__status != (self::ABNORMAL_EXIT << 8)) {
           $__response = self::EXITED;
         } else {
           $__response = self::FAILED;
@@ -139,7 +139,7 @@ class EvalWorker {
    */
   public function delegateExceptionHandler($ex) {
     call_user_func($this->_exceptionHandler, $ex);
-    exit(-1);
+    exit(self::ABNORMAL_EXIT);
   }
 
   // -- Private Methods
