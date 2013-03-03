@@ -1,5 +1,7 @@
 <?php
 
+/* vim: set shiftwidth=2 expandtab softtabstop=2: */
+
 /**
  * Custom autoloader for non-composer installations.
  */

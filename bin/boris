@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+/* vim: set shiftwidth=2 expandtab softtabstop=2: */
+
 require_once __DIR__.'/../lib/autoload.php';
 
 $boris = new \Boris\Boris();
