@@ -26,24 +26,24 @@ class Boris {
     $this->_inspector = new DumpInspector();
   }
 
-	/**
-	 * Set a local variable, or many local variables.
-	 *
-	 * @example Setting a single variable
-	 *   $boris->setLocal('user', $bob);
-	 *
+  /**
+   * Set a local variable, or many local variables.
+   *
+   * @example Setting a single variable
+   *   $boris->setLocal('user', $bob);
+   *
    * @example Setting many variables at once
    *   $boris->setLocal(array('user' => $bob, 'appContext' => $appContext));
-	 *
-	 * @param array|string $local
-	 * @param mixed $value, optional
-	 */
-	public function setLocal($local, $value = null) {
-		if (!is_array($local)) {
-			$local = array($local => $value);
-		}
+   *
+   * @param array|string $local
+   * @param mixed $value, optional
+   */
+  public function setLocal($local, $value = null) {
+    if (!is_array($local)) {
+      $local = array($local => $value);
+    }
 
-		$this->_exports = $local;
+    $this->_exports = $local;
   }
 
   /**
