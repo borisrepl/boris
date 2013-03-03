@@ -28,6 +28,7 @@ class EvalWorker {
   public function __construct($socket) {
     $this->_socket    = $socket;
     $this->_inspector = new DumpInspector();
+    stream_set_blocking($socket, 0);
   }
 
   /**
