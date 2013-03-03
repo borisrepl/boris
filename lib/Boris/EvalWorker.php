@@ -19,6 +19,7 @@ class EvalWorker {
   private $_pid;
   private $_cancelled;
   private $_inspector;
+  private $_exceptionHandler;
 
   /**
    * Create a new worker using the given socket for communication.
@@ -89,6 +90,12 @@ class EvalWorker {
           $__response = self::FAILED;
         }
       } else {
+        // user exception handlers normally cause a clean exit, so Boris will exit too
+        if (!$this->_exceptionHandler =
+          set_exception_handler(array($this, 'delegateExceptionHandler'))) {
+          restore_exception_handler();
+        }
+
         // undo ctrl-c signal handling ready for user code execution
         pcntl_signal(SIGINT, SIG_DFL, true);
         $__pid = posix_getpid();
@@ -125,6 +132,14 @@ class EvalWorker {
     $this->_cancelled = true;
     posix_kill($this->_pid, SIGKILL);
     pcntl_signal_dispatch();
+  }
+
+  /**
+   * If any user-defined exception handler is present, call it, but be sure to exit correctly.
+   */
+  public function delegateExceptionHandler($ex) {
+    call_user_func($this->_exceptionHandler, $ex);
+    exit(-1);
   }
 
   // -- Private Methods

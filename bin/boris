@@ -5,5 +5,7 @@
 
 require_once __DIR__.'/../lib/autoload.php';
 
+set_exception_handler(function($ex){ /*exit(-1);*/ });
+
 $boris = new \Boris\Boris();
 $boris->start();

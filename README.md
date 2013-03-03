@@ -108,17 +108,15 @@ Note that you can change this from inside the REPL too:
     boris> "Test";
     -> 'Test'
 
-## Boris exits on Exceptions when inside my app?
+## Boris doesn't display exceptions or errors when running in my app?
 
-If you have an Exception handler installed, the effect is that instead of your
-program crashing, it handles the exception and exits cleanly. This makes Boris
-think you do something that inoked exit(); and it can't feasibly determine if
-you did or not. The best thing to do is avoid setting an exception handlers when
-running your app inside of Boris, or you can exit(-1), which is the exit code
-PHP normally uses during a fatal error, and what Boris checks for.
+Boris honours your environment. If your application has error handlers
+installed, they will mask the error. Likewise, if an exception handler is
+installed, you won't see a backtrace (unless your exception handler displays it).
 
-If your Exception handler hides the error from you, then Boris isn't going to be
-particularly helpful, so the best thing to do is disable it entirely.
+Since Boris is much more useful when you can see errors in the console, the best
+thing to do is to disable any exception/error handlers when your application
+is running inside of Boris.
 
 ## What about PHP's interactive mode?
 
