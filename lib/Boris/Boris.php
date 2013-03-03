@@ -64,19 +64,25 @@ class Boris {
     declare(ticks = 1);
     pcntl_signal(SIGINT, SIG_IGN, true);
 
-    if (!socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $socks)) {
+    $pipe = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+
+    stream_set_blocking($pipe[0], 0);
+
+    if (!$pipe) {
       throw new \RuntimeException('Failed to create socket pair');
     }
 
     $pid = pcntl_fork();
 
     if ($pid > 0) {
-      $client = new ReadlineClient($socks[1]);
+      fclose($pipe[0]);
+      $client = new ReadlineClient($pipe[1]);
       $client->start($this->_prompt, $this->_historyFile);
     } elseif ($pid < 0) {
       throw new \RuntimeException('Failed to fork child process');
     } else {
-      $worker = new EvalWorker($socks[0]);
+      fclose($pipe[1]);
+      $worker = new EvalWorker($pipe[0]);
       $worker->setExports($this->_exports);
       $worker->setInspector($this->_inspector);
       $worker->start();

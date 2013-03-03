@@ -4,8 +4,7 @@
         "php": ">=5.3.0",
         "ext-readline": "*",
         "ext-pcntl": "*",
-        "ext-posix": "*",
-        "ext-sockets": "*"
+        "ext-posix": "*"
     },
     "autoload": {
         "psr-0": {"Boris": "lib"}
