@@ -62,12 +62,14 @@ class EvalWorker {
 
       $this->_cancelled = false;
 
-      $__input = '';
-      while ('' !== $__buf = socket_read($this->_socket, 8192, PHP_BINARY_READ)) {
-        $__input .= $__buf;
-        if (strlen($__buf) < 8192) {
-          break;
-        }
+      try {
+        $__input = $this->_read($this->_socket);
+      } catch (\UnexpectedValueException $e) {
+        exit;
+      }
+
+      if ($__input === null) {
+        continue;
       }
 
       $__response = self::DONE;
@@ -106,7 +108,7 @@ class EvalWorker {
         $this->_expungeOldWorker();
       }
 
-      if (!socket_write($this->_socket, $__response)) {
+      if (!fwrite($this->_socket, $__response)) {
         throw new \RuntimeException('Socket error: failed to write data');
       }
 
@@ -131,5 +133,20 @@ class EvalWorker {
   private function _expungeOldWorker() {
     posix_kill($this->_ppid, SIGTERM);
     pcntl_signal_dispatch();
+  }
+
+  private function _read($socket)
+  {
+    $read = array($socket);
+    $write = null;
+    $except = array($socket);
+
+    if (stream_select($read, $write, $except, 10) > 0) {
+      if ($read) {
+        return stream_get_contents($read[0]);
+      } else if ($except) {
+        throw new \UnexpectedValueException("Socket was closed");
+      }
+    }
   }
 }
