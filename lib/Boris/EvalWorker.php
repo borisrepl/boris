@@ -62,11 +62,7 @@ class EvalWorker {
 
       $this->_cancelled = false;
 
-      try {
-        $__input = $this->_read($this->_socket);
-      } catch (\UnexpectedValueException $e) {
-        exit;
-      }
+      $__input = $this->_read($this->_socket);
 
       if ($__input === null) {
         continue;
