@@ -62,12 +62,12 @@ class ReadlineClient {
       if ($statements = $parser->statements($buf)) {
         $buf = '';
         foreach ($statements as $stmt) {
-          if (false === $written = socket_write($this->_socket, $stmt)) {
+          if (false === $written = fwrite($this->_socket, $stmt)) {
             throw new \RuntimeException('Socket error: failed to write data');
           }
 
           if ($written > 0) {
-            $status = socket_read($this->_socket, 1);
+            $status = fread($this->_socket, 1);
             if ($status == EvalWorker::EXITED) {
               readline_write_history($historyFile);
               echo "\n";
