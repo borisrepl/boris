@@ -3,7 +3,7 @@
 namespace Boris;
 
 /**
- * EvalWorker is reponsible for evaluating PHP expressions in forked processes.
+ * EvalWorker is responsible for evaluating PHP expressions in forked processes.
  */
 class EvalWorker {
   const ABNORMAL_EXIT = 65280;
@@ -38,7 +38,7 @@ class EvalWorker {
   }
 
   /**
-   * Set an Inspector object for Boris to ouput return values with.
+   * Set an Inspector object for Boris to output return values with.
    *
    * @param object $inspector any object the responds to inspect($v)
    */

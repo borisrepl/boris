@@ -47,7 +47,7 @@ class Boris {
   }
 
   /**
-   * Set an Inspector object for Boris to ouput return values with.
+   * Set an Inspector object for Boris to output return values with.
    *
    * @param object $inspector any object the responds to inspect($v)
    */
