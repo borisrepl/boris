@@ -74,12 +74,20 @@ class Boris {
     $pid = pcntl_fork();
 
     if ($pid > 0) {
+      if (function_exists('setproctitle')) {
+        setproctitle('boris (master)');
+      }
+
       fclose($pipes[0]);
       $client = new ReadlineClient($pipes[1]);
       $client->start($this->_prompt, $this->_historyFile);
     } elseif ($pid < 0) {
       throw new \RuntimeException('Failed to fork child process');
     } else {
+      if (function_exists('setproctitle')) {
+        setproctitle('boris (worker)');
+      }
+
       fclose($pipes[1]);
       $worker = new EvalWorker($pipes[0]);
       $worker->setExports($this->_exports);
