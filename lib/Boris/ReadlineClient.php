@@ -40,11 +40,20 @@ class ReadlineClient {
     pcntl_signal(SIGINT, array($this, 'clear'), true);
 
     $parser = new ShallowParser();
-    $buf = '';
+    $buf    = '';
+    $lineno = 1;
 
     for (;;) {
       $this->_clear = false;
-      $line = readline($buf == '' ? $prompt : str_pad('*> ', strlen($prompt), ' ', STR_PAD_LEFT));
+      $line = readline(
+        sprintf(
+          '[%d] %s',
+          $lineno,
+          ($buf == ''
+            ? $prompt
+            : str_pad('*> ', strlen($prompt), ' ', STR_PAD_LEFT))
+        )
+      );
 
       if ($this->_clear) {
         $buf = '';
@@ -62,6 +71,8 @@ class ReadlineClient {
       $buf .= sprintf("%s\n", $line);
 
       if ($statements = $parser->statements($buf)) {
+        ++$lineno;
+
         $buf = '';
         foreach ($statements as $stmt) {
           if (false === $written = fwrite($this->_socket, $stmt)) {
