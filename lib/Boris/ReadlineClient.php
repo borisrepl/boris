@@ -14,6 +14,7 @@ class ReadlineClient {
   private $_prompt;
   private $_historyFile;
   private $_clear = false;
+  private $_parser;
 
   /**
    * Create a new ReadlineClient using $socket for communication.
@@ -39,9 +40,11 @@ class ReadlineClient {
     pcntl_signal(SIGCHLD, SIG_IGN);
     pcntl_signal(SIGINT, array($this, 'clear'), true);
 
-    $parser = new ShallowParser();
+    $this->_parser = new ShallowParser();
     $buf    = '';
     $lineno = 1;
+
+    readline_completion_function(array($this, 'complete'));
 
     for (;;) {
       $this->_clear = false;
@@ -70,7 +73,7 @@ class ReadlineClient {
 
       $buf .= sprintf("%s\n", $line);
 
-      if ($statements = $parser->statements($buf)) {
+      if ($statements = $this->_parser->statements($buf)) {
         ++$lineno;
 
         $buf = '';
@@ -92,6 +95,28 @@ class ReadlineClient {
         }
       }
     }
+  }
+
+  /**
+   * @param $arg
+   * @return array completions
+   *
+   * Naively complete built-in function and constants
+   */
+  public function complete($arg) {
+    $symbolLists = get_defined_functions();
+    $symbolLists['constants'] = array_keys(get_defined_constants());
+    $candidates = array();
+    if ($result = $this->_parser->parse($arg)) {
+      if ($result->stmt != '') {
+        foreach ($symbolLists as $symbols) {
+          $candidates += array_filter($symbols, function($symbol) use ($result, &$candidates) {
+            return (strpos($symbol, $result->stmt) === 0);
+          });
+        }
+      }
+    }
+    return $candidates;
   }
 
   /**
