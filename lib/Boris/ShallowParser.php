@@ -36,6 +36,20 @@ class ShallowParser {
    * @return array
    */
   public function statements($buffer) {
+    $result = $this->parse($buffer);
+
+    if (!empty($result->statements) && trim($result->stmt) === '' && strlen($result->buffer) == 0) {
+      $this->_combineStatements($result);
+      $this->_prepareForDebug($result);
+      return $result->statements;
+    }
+  }
+
+  /**
+   * @param $buffer
+   */
+  public function parse($buffer)
+  {
     $result = $this->_createResult($buffer);
 
     while (strlen($result->buffer) > 0) {
@@ -59,12 +73,7 @@ class ShallowParser {
         break;
       }
     }
-
-    if (!empty($result->statements) && trim($result->stmt) === '' && strlen($result->buffer) == 0) {
-      $this->_combineStatements($result);
-      $this->_prepareForDebug($result);
-      return $result->statements;
-    }
+    return $result;
   }
 
   public function quote($token) {
