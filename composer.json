@@ -6,6 +6,9 @@
         "ext-pcntl": "*",
         "ext-posix": "*"
     },
+    "require-dev": {
+        "symfony/finder": "~2.1"
+    },
     "autoload": {
         "psr-0": {"Boris": "lib"}
     },
