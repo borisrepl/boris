@@ -57,6 +57,15 @@ class Boris {
     $this->_inspector = $inspector;
   }
 
+    /**
+     * Set the error reporting level
+     *
+     * @param int $errorLevel the level of error to report
+     */
+    public function setErrorReporting($errorLevel) {
+       error_reporting($errorLevel);
+   }
+
   /**
    * Start the REPL (display the readline prompt).
    *
