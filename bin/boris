@@ -6,4 +6,5 @@
 require_once __DIR__.'/../lib/autoload.php';
 
 $boris = new \Boris\Boris();
+$boris->setErrorReporting(0);
 $boris->start();
