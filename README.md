@@ -29,6 +29,16 @@ Boris is available via Packagist, or you can use it directly from this repo:
 
 **Pro Tip**: Add boris to your $PATH for easy access.
 
+You can also build a PHAR file using [Box](http://box-project.org/):
+
+    box build
+
+This will create a `boris.phar` file. Feel free to move it into your bin
+directory:
+
+    mv boris.phar /usr/local/bin/boris
+    chmod +x /usr/local/bin/boris
+
 When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
 this prompt is evaluated.  If an expression spans multiple lines, Boris will
 collect the input and then evaluate the expression when it is complete. Press
