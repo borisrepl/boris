@@ -6,26 +6,9 @@
 require_once __DIR__.'/../lib/autoload.php';
 
 $boris = new \Boris\Boris();
+$config = new \Boris\Config();
 
-/**
- * Load .borisrc, if one exists in any of the following
- * paths. Searches are made from top to bottom, giving
- * precedence to whichever is found first.
- */
-$borisRcSearchPaths = array();
-
-// search in user's $HOME
-if(!empty($_SERVER['HOME'])) {
-  $borisRcSearchPaths[] = "{$_SERVER['HOME']}/.borisrc";
-}
-
-$borisRcSearchPaths[] = "./.borisrc"; // search in cwd
-
-foreach($borisRcSearchPaths as $borisRcPath) {
-	if(is_readable($borisRcPath)) {
-		require $borisRcPath;
-		break;
-	}
-}
+// Load user/project configuration files:
+$config->apply($boris);
 
 $boris->start();
