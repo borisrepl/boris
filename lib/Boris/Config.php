@@ -57,7 +57,7 @@ class Config {
       if(is_readable($path)) {
 
         // Maybe this is overkill?
-        call_user_func(function() use($boris) {
+        call_user_func(function() use($path, $boris) {
           require $path;
         });
 
