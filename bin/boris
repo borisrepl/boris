@@ -9,6 +9,6 @@ $boris = new \Boris\Boris();
 $config = new \Boris\Config();
 
 // Load user/project configuration files:
-$config->apply($boris);
+$config->apply($boris, true);
 
 $boris->start();
