@@ -27,8 +27,8 @@ class Config {
     if(null === $searchPaths) {
       $searchPaths = array();
 
-      if(!empty($_SERVER['HOME'])) {
-        $searchPaths[] = "{$_SERVER['HOME']}/.borisrc";
+      if($userHome = getenv('HOME')) {
+        $searchPaths[] = "{$userHome}/.borisrc";
       }
 
       $searchPaths[] = getcwd() . '/.borisrc';
@@ -56,10 +56,7 @@ class Config {
     foreach($this->_searchPaths as $path) {
       if(is_readable($path)) {
 
-        // Maybe this is overkill?
-        call_user_func(function() use($path, $boris) {
-          require $path;
-        });
+        $this->_loadInIsolation($path, $boris);
 
         $applied = true;
         $this->_files[] = $path;
@@ -71,6 +68,16 @@ class Config {
     }
 
     return $applied;
+  }
+
+  /**
+   * Includes a php script within its own scope.
+   * 
+   * @param Boris\Boris $boris
+   * @param string $path
+   */
+  private function _loadInIsolation($path, Boris $boris) {
+    require $path;
   }
 
   /**
