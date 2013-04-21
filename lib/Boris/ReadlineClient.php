@@ -39,6 +39,11 @@ class ReadlineClient {
     pcntl_signal(SIGCHLD, SIG_IGN);
     pcntl_signal(SIGINT, array($this, 'clear'), true);
 
+    // wait for the worker to finish executing hooks
+    if (fread($this->_socket, 1) != EvalWorker::READY) {
+      throw new \RuntimeException('EvalWorker failed to start');
+    }
+
     $parser = new ShallowParser();
     $buf    = '';
     $lineno = 1;

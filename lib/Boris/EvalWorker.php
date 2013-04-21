@@ -12,9 +12,11 @@ class EvalWorker {
   const DONE   = "\0";
   const EXITED = "\1";
   const FAILED = "\2";
+  const READY  = "\3";
 
   private $_socket;
   private $_exports = array();
+  private $_startHooks = array();
   private $_ppid;
   private $_pid;
   private $_cancelled;
@@ -35,10 +37,24 @@ class EvalWorker {
   /**
    * Set local variables to be placed in the workers's scope.
    *
-   * @param array $exports
+   * @param array|string $local
+   * @param mixed $value, if $local is a string
    */
-  public function setExports($exports) {
-    $this->_exports = $exports;
+  public function setLocal($local, $value = null) {
+    if (!is_array($local)) {
+      $local = array($local => $value);
+    }
+
+    $this->_exports = array_merge($this->_exports, $local);
+  }
+
+  /**
+   * Set hooks to run inside the worker before it starts looping.
+   *
+   * @param array $hooks
+   */
+  public function setStartHooks($hooks) {
+    $this->_startHooks = $hooks;
   }
 
   /**
@@ -56,7 +72,10 @@ class EvalWorker {
    * This method never returns.
    */
   public function start() {
-    extract($this->_exports);
+    $__scope = $this->_runStartHooks();
+    extract($__scope);
+
+    $this->_write($this->_socket, self::READY);
 
     /* Note the naming of the local variables due to shared scope with the user here */
     for (;;) {
@@ -114,9 +133,7 @@ class EvalWorker {
         $this->_expungeOldWorker();
       }
 
-      if (!fwrite($this->_socket, $__response)) {
-        throw new \RuntimeException('Socket error: failed to write data');
-      }
+      $this->_write($this->_socket, $__response);
 
       if ($__response == self::EXITED) {
         exit(0);
@@ -144,9 +161,39 @@ class EvalWorker {
 
   // -- Private Methods
 
+  private function _runStartHooks() {
+    extract($this->_exports);
+
+    foreach ($this->_startHooks as $__hook) {
+      if (is_string($__hook)) {
+        eval($__hook);
+      } elseif ($__hook instanceof \Closure) {
+        $__hook($this, get_defined_vars());
+      } else {
+        throw new \RuntimeException(
+          sprintf(
+            'Hooks must be closures or strings of PHP code. Got [%s].',
+            gettype($__hook)
+          )
+        );
+      }
+
+      // hooks may set locals
+      extract($this->_exports);
+    }
+
+    return get_defined_vars();
+  }
+
   private function _expungeOldWorker() {
     posix_kill($this->_ppid, SIGTERM);
     pcntl_signal_dispatch();
+  }
+
+  private function _write($socket, $data) {
+    if (!fwrite($socket, $data)) {
+      throw new \RuntimeException('Socket error: failed to write data');
+    }
   }
 
   private function _read($socket)

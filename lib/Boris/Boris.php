@@ -11,6 +11,7 @@ class Boris {
   private $_prompt;
   private $_historyFile;
   private $_exports = array();
+  private $_startHooks = array();
   private $_inspector;
 
   /**
@@ -29,6 +30,37 @@ class Boris {
   }
 
   /**
+   * Add a new hook to run in the context of the REPL when it starts.
+   *
+   * @param mixed $hook
+   *
+   * The hook is either a string of PHP code to eval(), or a Closure accepting
+   * the EvalWorker object as its first argument and the array of defined
+   * local variables in the second argument.
+   *
+   * If the hook is a callback and needs to set any local variables in the
+   * REPL's scope, it should invoke $worker->setLocal($var_name, $value) to
+   * do so.
+   *
+   * Hooks are guaranteed to run in the order they were added and the state
+   * set by each hook is available to the next hook (either through global
+   * resources, such as classes and interfaces, or through the 2nd parameter
+   * of the callback, if any local variables were set.
+   *
+   * @example Contrived example where one hook sets the date and another
+   *          prints it in the REPL.
+   *
+   *   $boris->onStart(function($worker, $vars){
+   *     $worker->setLocal('date', date('Y-m-d'));
+   *   });
+   *
+   *   $boris->onStart('echo "The date is $date\n";');
+   */
+  public function onStart($hook) {
+    $this->_startHooks[] = $hook;
+  }
+
+  /**
    * Set a local variable, or many local variables.
    *
    * @example Setting a single variable
@@ -36,6 +68,8 @@ class Boris {
    *
    * @example Setting many variables at once
    *   $boris->setLocal(array('user' => $bob, 'appContext' => $appContext));
+   *
+   * This method can safely be invoked repeatedly.
    *
    * @param array|string $local
    * @param mixed $value, optional
@@ -45,7 +79,7 @@ class Boris {
       $local = array($local => $value);
     }
 
-    $this->_exports = $local;
+    $this->_exports = array_merge($this->_exports, $local);
   }
 
   /**
@@ -99,7 +133,8 @@ class Boris {
 
       fclose($pipes[1]);
       $worker = new EvalWorker($pipes[0]);
-      $worker->setExports($this->_exports);
+      $worker->setLocal($this->_exports);
+      $worker->setStartHooks($this->_startHooks);
       $worker->setInspector($this->_inspector);
       $worker->start();
     }

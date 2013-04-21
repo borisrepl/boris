@@ -75,28 +75,6 @@ without quitting the REPL, by using CTRL-C while the operation is running.
     ^CCancelling...
     boris>
 
-### User configuration files
-
-If you have, things you always want to do when Boris starts, such as load
-useful utility functions, change the prompt or set local variable, you
-may create a ~/.borisrc file, which will be loaded whenever Boris starts up.
-
-The contents of this file are just arbitrary PHP code. You are *not* inside
-the REPL itself in this file, but you have access to `$boris`, which is the
-REPL object. Here's an example ~/.borisrc that sets the prompt.
-
-    <?php
-
-    /* File: ~/.borisrc */
-
-    $boris->setPrompt('prompty> ');
-
-Boris will also look under your current working directory for this file. If
-it finds one on both locations, they will both be loaded by default (not that
-this is customizable at the code level).
-
-Thanks to [@filp](https://github.com/filp) for this feature!
-
 ### Using Boris with your application loaded
 
 You can also use Boris as part of a larger project (e.g. with your application
@@ -117,6 +95,62 @@ application), you can do that too (thanks to [@dhotston](https://github.com/dhot
     $boris->start();
 
 In the above example, $appContext will be present inside the REPL.
+
+### Using start hooks
+
+It is possible to add callbacks to Boris that are executed inside the REPL
+before it begins looping. Any number of hooks can be added, and they will be
+executed in order. Any variables set or exported by the hook will become
+visible from inside the REPL and consequently, to subsequent hooks that are
+run.
+
+There are two ways to specify hooks: as arbitrary strings of PHP code to
+evaluate, or as callbacks given as closures. Both approaches allow you access
+to the scope, though you need to do slightly more work with the callback
+approach.
+
+    // this will simply be evaluated in the REPL scope
+    // the variables $foo and $bar will be visible inside the REPL
+    $boris->onStart('$foo = 42; $bar = 2; echo "Hello Boris!\n";');
+
+    // this will be passed the REPL and it's scope as arguments
+    // any changes to the scope can be expressed by invoking the usual
+    // methods on the REPL
+    $boris->onStart(function($worker, $scope){
+      extract($scope); // we could also just access specific vars by key
+
+      echo '$foo * $bar = ' . ($foo * $bar) . "\n";
+
+      $worker->setLocal('name', 'Chris');
+    });
+
+Above we added two hooks. The first just gets passed to `eval()` and leaves
+`$foo` and `$bar` in scope. The second uses the callback style and reads its
+variables from the `$scope` parameter, then sets variables into the REPL
+with `setLocal()`.
+
+### User configuration files
+
+If you have, things you always want to do when Boris starts, such as load
+useful utility functions, change the prompt or set local variable, you
+may create a ~/.borisrc file, which will be loaded whenever Boris starts up.
+
+The contents of this file are just arbitrary PHP code. You are *not* inside
+the REPL itself in this file, but you have access to `$boris`, which is the
+REPL object. Here's an example ~/.borisrc that sets the prompt.
+
+    <?php
+
+    /* File: ~/.borisrc */
+
+    $boris->setPrompt('prompty> ');
+
+Boris will also look under your current working directory for this file. If
+it finds one on both locations, they will both be loaded by default (not that
+this is customizable at the code level). If you need to execute code in the
+REPL itself, use hooks as documented above.
+
+Thanks to [@filp](https://github.com/filp) for this feature!
 
 ### Customizing the output
 
