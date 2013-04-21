@@ -95,7 +95,7 @@ Boris will also look under your current working directory for this file. If
 it finds one on both locations, they will both be loaded by default (not that
 this is customizable at the code level).
 
-Thanks to [@filp] for this feature!
+Thanks to [@filp](https://github.com/filp) for this feature!
 
 ### Using Boris with your application loaded
 
@@ -110,7 +110,7 @@ environment loaded).
 The constructor parameter is optional and changes the prompt.
 
 If you want to pass local variables straight into Boris (e.g. parts of your
-application), you can do that too (thanks to @dhotston):
+application), you can do that too (thanks to [@dhotston](https://github.com/dhotston)):
 
     $boris = new \Boris\Boris('myapp> ');
     $boris->setLocal(array('appContext' => $appContext));
