@@ -20,7 +20,7 @@ class Boris {
    * @param string $historyFile, optional
    */
   public function __construct($prompt = 'boris> ', $historyFile = null) {
-    $this->_prompt      = $prompt;
+    $this->setPrompt($prompt);
     $this->_historyFile = $historyFile
       ? $historyFile
       : sprintf('%s/.boris_history', getenv('HOME'))
@@ -46,6 +46,15 @@ class Boris {
     }
 
     $this->_exports = $local;
+  }
+
+  /**
+   * Sets the Boris prompt text
+   * 
+   * @param string $prompt
+   */
+  public function setPrompt($prompt) {
+    $this->_prompt = $prompt;
   }
 
   /**
