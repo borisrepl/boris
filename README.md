@@ -75,6 +75,28 @@ without quitting the REPL, by using CTRL-C while the operation is running.
     ^CCancelling...
     boris>
 
+### User configuration files
+
+If you have, things you always want to do when Boris starts, such as load
+useful utility functions, change the prompt or set local variable, you
+may create a ~/.borisrc file, which will be loaded whenever Boris starts up.
+
+The contents of this file are just arbitrary PHP code. You are *not* inside
+the REPL itself in this file, but you have access to `$boris`, which is the
+REPL object. Here's an example ~/.borisrc that sets the prompt.
+
+    <?php
+
+    /* File: ~/.borisrc */
+
+    $boris->setPrompt('prompty> ');
+
+Boris will also look under your current working directory for this file. If
+it finds one on both locations, they will both be loaded by default (not that
+this is customizable at the code level).
+
+Thanks to [@filp] for this feature!
+
 ### Using Boris with your application loaded
 
 You can also use Boris as part of a larger project (e.g. with your application

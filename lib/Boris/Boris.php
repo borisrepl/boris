@@ -50,7 +50,7 @@ class Boris {
 
   /**
    * Sets the Boris prompt text
-   * 
+   *
    * @param string $prompt
    */
   public function setPrompt($prompt) {
