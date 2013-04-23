@@ -26,9 +26,26 @@ USAGE;
 
   $args = getopt('hr:', array('help', 'require:'));
 
-  if(isset($args['h'])) {
-    print $usage;
-    exit(0);
+  foreach($args as $option => $value) {
+    switch($option) {
+      /*
+       * Sets files to load at startup, may be used multiple times,
+       * i.e: boris -r test.php,foo/bar.php -r ba/foo.php --require hey.php
+       */
+      case 'r':
+      case 'require':
+        var_dump('require', explode(', ', $value));
+      break;
+
+      /*
+       * Show Usage info
+       */
+      case 'h':
+      case 'help':
+        print $usage;
+        exit(0);
+      break;
+    }
   }
 });
 
