@@ -10,4 +10,26 @@ $boris  = new \Boris\Boris();
 $config = new \Boris\Config();
 $config->apply($boris, true);
 
+/*
+ * Handle command-line arguments.
+ */
+call_user_func(function() use($boris) {
+  $usage = <<<USAGE
+Usage: boris [options] [includes]
+boris is a tiny REPL for PHP
+
+Options:
+  -h, --help     show this help message and exit
+  -r, --require  a comma-separated list of files to require on startup
+
+USAGE;
+
+  $args = getopt('hr:', array('help', 'require:'));
+
+  if(isset($args['h'])) {
+    print $usage;
+    exit(0);
+  }
+});
+
 $boris->start();
