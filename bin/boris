@@ -10,4 +10,7 @@ $boris  = new \Boris\Boris();
 $config = new \Boris\Config();
 $config->apply($boris, true);
 
+$options = new \Boris\CLIOptionsHandler();
+$options->handle($boris);
+
 $boris->start();
