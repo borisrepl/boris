@@ -57,6 +57,15 @@ USAGE;
       break;
     }
   }
+
+  // Expose required files to the worker:
+  $boris->onStart(function($worker, $scope) use($require) {
+    foreach($require as $path) {
+      require $path;
+    }
+
+    $worker->setLocal(get_defined_vars());
+  });
 });
 
 $boris->start();
