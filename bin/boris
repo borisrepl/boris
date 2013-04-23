@@ -10,62 +10,7 @@ $boris  = new \Boris\Boris();
 $config = new \Boris\Config();
 $config->apply($boris, true);
 
-/*
- * Handle command-line arguments.
- */
-call_user_func(function() use($boris) {
-  $usage = <<<USAGE
-Usage: boris [options] [includes]
-boris is a tiny REPL for PHP
-
-Options:
-  -h, --help     show this help message and exit
-  -r, --require  a comma-separated list of files to require on startup
-
-USAGE;
-
-  $args = getopt('hr:', array('help', 'require:'));
-  $require = array();
-
-  foreach($args as $option => $value) {
-    switch($option) {
-      /*
-       * Sets files to load at startup, may be used multiple times,
-       * i.e: boris -r test.php,foo/bar.php -r ba/foo.php --require hey.php
-       */
-      case 'r':
-      case 'require':
-        // if multiple values of -r/--required are available, unwrap
-        // the array built by getopt:
-        // this looks really ugly <:|
-        if(is_array($value)) {
-          foreach($value as $v) {
-            $require = array_merge($require, explode(',', $v));
-          }
-        } else {
-          $require = array_merge($require, explode(',', $value));
-        }
-      break;
-
-      /*
-       * Show Usage info
-       */
-      case 'h':
-      case 'help':
-        print $usage;
-        exit(0);
-      break;
-    }
-  }
-
-  // Expose required files to the worker:
-  $boris->onStart(function($worker, $scope) use($require) {
-    foreach($require as $path) {
-      require $path;
-    }
-
-    $worker->setLocal(get_defined_vars());
-  });
-});
+$options = new \Boris\CLIOptionsHandler();
+$options->handle($boris);
 
 $boris->start();
