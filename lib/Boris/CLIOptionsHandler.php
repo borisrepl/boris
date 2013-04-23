@@ -58,7 +58,7 @@ class CLIOptionsHandler {
 
   private function _handleUsageInfo() {
     echo <<<USAGE
-Usage: boris [options] [includes]
+Usage: boris [options]
 boris is a tiny REPL for PHP
 
 Options:
