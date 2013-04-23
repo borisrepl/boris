@@ -35,16 +35,11 @@ USAGE;
        */
       case 'r':
       case 'require':
-        // if multiple values of -r/--required are available, unwrap
-        // the array built by getopt:
-        // this looks really ugly <:|
-        if(is_array($value)) {
-          foreach($value as $v) {
-            $require = array_merge($require, explode(',', $v));
-          }
-        } else {
-          $require = array_merge($require, explode(',', $value));
-        }
+        $require = array_reduce(
+          (array) $value,
+          function($acc, $v) { return array_merge($acc, explode(',', $v)); },
+          $require
+        );
       break;
 
       /*
