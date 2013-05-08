@@ -13,7 +13,7 @@ class CleanInspector implements Inspector {
   // Terminal color codes
   static $TERM_COLORS = array(
     'black' =>     "\033[0;30m",
-    'dk_gray' =>   "\033[1;30m",
+    'default' =>   "\033[1;30m",
     'dk_grey' =>   "\033[1;30m",
     'dk_red' =>    "\033[0;31m",
     'lt_red' =>    "\033[1;31m",
@@ -34,10 +34,22 @@ class CleanInspector implements Inspector {
   
   /**
    * If you'd prefer to skip the color highlighting, pass
-   * false on construction.
+   * false on construction.  If you'd like to change which
+   * color is associated with a given type, pass in an associative
+   * array with the keys 'int', 'string', 'bool', and 'default' and
+   * values from the TERM_COLORS hash.
    */
-  public function __construct($useColors = true) {
-    $this->useColors = $useColors;
+  public function __construct($colorMap = null) {
+    if (is_array($colorMap) || $colorMap === false) {
+      $this->colorMap = $colorMap;
+    } else {
+      $this->colorMap = array(
+        'num' => 'lt_blue',
+        'string' => 'lt_cyan',
+        'bool' => 'lt_purple',
+        'default' => 'default'
+      );
+    }
   }
   
   /**
@@ -54,13 +66,13 @@ class CleanInspector implements Inspector {
    */
   protected function dump($val, $indent = '') {
     if (is_string($val)) {
-      $text = $this->color('lt_cyan', var_export($val, true));
+      $text = $this->color('string', var_export($val, true));
       
     } else if (is_bool($val)) {
-      $text = $this->color('lt_purple', var_export($val, true));
+      $text = $this->color('bool', var_export($val, true));
 
     } else if (is_numeric($val)) {
-      $text = $this->color('lt_blue', var_export($val, true));
+      $text = $this->color('num', var_export($val, true));
       
     } else if (is_array($val)) {
       $indexed = array_values($val) === $val;
@@ -73,52 +85,52 @@ class CleanInspector implements Inspector {
       
       if ($indexed) {
         if (empty($val)) {
-          $text = $this->color('dk_gray', "[]");
+          $text = $this->color('default', "[]");
         } else {
-          $text = $this->color('dk_gray', "[\n");
+          $text = $this->color('default', "[\n");
           $counter = count($val);
           foreach ($val as $v) {
             $text .= $indent . "  " . $this->dump($v, $indent . '  ');
-            if (--$counter || $extraCount) { $text .= $this->color('dk_gray', ','); }
+            if (--$counter || $extraCount) { $text .= $this->color('default', ','); }
             $text .= "\n";
           }
           if ($extraCount) {
-            $text .= $this->color('dk_gray', $indent . "  ... and $extraCount more ...\n");
+            $text .= $this->color('default', $indent . "  ... and $extraCount more ...\n");
           }
-          $text .= $indent . $this->color('dk_gray', ']');
+          $text .= $indent . $this->color('default', ']');
         }
         
       } else {
         if (empty($val)) {
-          $text = $this->color('dk_gray', "{}");
+          $text = $this->color('default', "{}");
         } else {
-          $text = $this->color('dk_gray', "{\n");
+          $text = $this->color('default', "{\n");
           $counter = count($val);
           foreach ($val as $k => $v) {
-            $text .= $indent . "  " . $this->dump($k) . $this->color('dk_gray', ' => ') . $this->dump($v, $indent . '  ');
-            if (--$counter || $extraCount) { $text .= $this->color('dk_gray', ','); }
+            $text .= $indent . "  " . $this->dump($k) . $this->color('default', ' => ') . $this->dump($v, $indent . '  ');
+            if (--$counter || $extraCount) { $text .= $this->color('default', ','); }
             $text .= "\n";
           }
           if ($extraCount) {
-            $text .= $indent . $this->color('dk_gray', "  ... and $extraCount more ...\n");
+            $text .= $indent . $this->color('default', "  ... and $extraCount more ...\n");
           }
-          $text .= $indent . $this->color('dk_gray', '}');
+          $text .= $indent . $this->color('default', '}');
         }
       }
       
     } else if (is_object($val)) {
-      $text = $this->color('dk_gray', get_class($val) . " {\n");
+      $text = $this->color('default', get_class($val) . " {\n");
       $vars = get_object_vars($val);
       $keys = array_keys($vars);
       sort($keys);
       $counter = count($vars);
       foreach ($keys as $k) {
         $v = $vars[$k];
-        $text .= $indent . '  ' . $this->color('dk_gray', $k . ' => ') . $this->dump($v, $indent . '  ');
-        if (--$counter) { $text .= $this->color('dk_gray', ','); }
+        $text .= $indent . '  ' . $this->color('default', $k . ' => ') . $this->dump($v, $indent . '  ');
+        if (--$counter) { $text .= $this->color('default', ','); }
         $text .= "\n";
       }
-      $text .= $indent . $this->color('dk_gray', '}');
+      $text .= $indent . $this->color('default', '}');
 
     } else {
       // Fall back on var_dump for, eg, functions
@@ -135,9 +147,11 @@ class CleanInspector implements Inspector {
    * Colors passed string based on terminal color lookup, resetting to
    * default color on return.
    */
-  protected function color($col, $str) {
-    if ($this->useColors) {
-      return static::$TERM_COLORS[$col] . $str . "\033[0m";
+  protected function color($type, $str) {
+    if ($this->colorMap) {
+      $index = $this->colorMap[$type];
+      if (!$index) { $index = $this->colorMap['default']; }
+      return static::$TERM_COLORS[$index] . $str . "\033[0m";
     } else {
       return $str;
     }
