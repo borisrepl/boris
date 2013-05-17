@@ -40,6 +40,7 @@ class CleanInspector implements Inspector {
    * values from the TERM_COLORS hash.
    */
   public function __construct($colorMap = null) {
+    // Select a color map to use from passed param, or use default
     if (is_array($colorMap) || $colorMap === false) {
       $this->colorMap = $colorMap;
     } else {
@@ -56,6 +57,11 @@ class CleanInspector implements Inspector {
    * Implement the inspector interface
    */
   public function inspect($variable) {
+    // Holds a list of all the complex items we've seen, to aid in
+    // preventing infinite recursion
+    $this->seenList = array();
+    
+    // Dump the variable, with initial indent to match "->"
     return $this->dump($variable, '   ');
   }
   
@@ -75,6 +81,7 @@ class CleanInspector implements Inspector {
       $text = $this->color('num', var_export($val, true));
       
     } else if (is_array($val)) {
+      // Get array properties - length and type (indexed or mapped)
       $indexed = array_values($val) === $val;
       if (count($val) > 10) {
         $extraCount = count($val) - 10;
@@ -84,9 +91,17 @@ class CleanInspector implements Inspector {
       }
       
       if ($indexed) {
+        // Indexed array, show simple list output
         if (empty($val)) {
+          // Empty array
           $text = $this->color('default', "[]");
+          
+        } else if ($this->isSeen($val)) {
+          // Array we've seen before!
+          $text = $this->color('default', "[ ... recursion ... ]");
+          
         } else {
+          // The real deal, display with contents
           $text = $this->color('default', "[\n");
           $counter = count($val);
           foreach ($val as $v) {
@@ -101,9 +116,17 @@ class CleanInspector implements Inspector {
         }
         
       } else {
+        // Mapped array, show key => value output
         if (empty($val)) {
+          // Empty case
           $text = $this->color('default', "{}");
+            
+        } else if ($this->isSeen($val)) {
+          // Array we've seen before!
+          $text = $this->color('default', "{ ... recursion ... }");
+
         } else {
+          // Full array, show contents
           $text = $this->color('default', "{\n");
           $counter = count($val);
           foreach ($val as $k => $v) {
@@ -119,18 +142,26 @@ class CleanInspector implements Inspector {
       }
       
     } else if (is_object($val)) {
-      $text = $this->color('default', get_class($val) . " {\n");
-      $vars = get_object_vars($val);
-      $keys = array_keys($vars);
-      sort($keys);
-      $counter = count($vars);
-      foreach ($keys as $k) {
-        $v = $vars[$k];
-        $text .= $indent . '  ' . $this->color('default', $k . ' => ') . $this->dump($v, $indent . '  ');
-        if (--$counter) { $text .= $this->color('default', ','); }
-        $text .= "\n";
+      $text = $this->color('default', get_class($val));
+      if ($this->isSeen($val)) {
+        // Don't recurse infinitely, please
+        $text .=  $this->color('default', " { ... recursion ... }");
+        
+      } else {
+        // Show full contents
+        $text .= $this->color('default', " {\n");
+        $vars = get_object_vars($val);
+        $keys = array_keys($vars);
+        sort($keys);
+        $counter = count($vars);
+        foreach ($keys as $k) {
+          $v = $vars[$k];
+          $text .= $indent . '  ' . $this->color('default', $k . ' => ') . $this->dump($v, $indent . '  ');
+          if (--$counter) { $text .= $this->color('default', ','); }
+          $text .= "\n";
+        }
+        $text .= $indent . $this->color('default', '}');
       }
-      $text .= $indent . $this->color('default', '}');
 
     } else {
       // Fall back on var_dump for, eg, functions
@@ -138,7 +169,6 @@ class CleanInspector implements Inspector {
       var_dump($val);
       $text = trim(ob_get_clean());
     }    
-
 
     return $text;
   }
@@ -155,6 +185,23 @@ class CleanInspector implements Inspector {
     } else {
       return $str;
     }
+  }
+  
+  /**
+   * Call with each object to be output, to see if it has already been output,
+   * for use in recursion stack blow prevention.  :-)
+   */
+  protected function isSeen($obj) {
+    if (!$obj) { return false; }
+    foreach ($this->seenList as $seen) {
+      // Test (using instance equality operator) for object identity match
+      // with existing objects
+      if ($obj === $seen) { return true; }
+    }
+    
+    // If we get here, the object has not been seen, so add it to the list!
+    $this->seenList[] = $obj;
+    return false;
   }
   
 } 
