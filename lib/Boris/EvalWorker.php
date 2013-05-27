@@ -167,8 +167,8 @@ class EvalWorker {
     foreach ($this->_startHooks as $__hook) {
       if (is_string($__hook)) {
         eval($__hook);
-      } elseif ($__hook instanceof \Closure) {
-        $__hook($this, get_defined_vars());
+      } elseif (is_callable($__hook)) {
+        call_user_func($__hook, $this, get_defined_vars());
       } else {
         throw new \RuntimeException(
           sprintf(
