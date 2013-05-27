@@ -21,7 +21,7 @@ fairly straightforward code.
 
 ## Usage
 
-Boris is available via Packagist, or you can use it directly from this repo:
+Boris is available via [Packagist](https://packagist.org/packages/d11wtq/boris), or you can use it directly from this repo:
 
     git clone git://github.com/d11wtq/boris.git
     cd boris
