@@ -162,10 +162,12 @@ Any object that has an `inspect($variable)` method may be used for this purpose.
 
     $boris->setInspector(new BlinkInspector());
 
-Boris comes with two alternatives out of the box:
+Boris comes with three alternatives out of the box:
 
   * \Boris\DumpInspector, which uses var_dump() and is the default
   * \Boris\ExportInspector, which uses var_export()
+  * \Boris\CleanInspector, which tries to intelligently dump each type, and 
+    optionally color-highlights values by type
 
 Note that you can change this from inside the REPL too:
 
