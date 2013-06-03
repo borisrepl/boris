@@ -90,7 +90,7 @@ class ColoredInspector implements Inspector {
 
   // -- Private Methods
 
-  private function _dump($value) {
+  public function _dump($value) {
     $tests = array(
       'is_null'    => '_dumpNull',
       'is_string'  => '_dumpString',
@@ -144,7 +144,7 @@ class ColoredInspector implements Inspector {
     return $this->_astToString($this->_buildAst($type, $value));
   }
 
-  private function _buildAst($type, $value, $seen = array()) {
+  public function _buildAst($type, $value, $seen = array()) {
     // FIXME: Improve this AST so it doesn't require access to dump() or colorize()
     if ($this->_isSeen($value, $seen)) {
       return $this->_colorize('default', '*** RECURSION ***');
@@ -162,7 +162,7 @@ class ColoredInspector implements Inspector {
 
     return array(
       'name'     => $this->_colorize('keyword', $type),
-      'children' => array_combine(
+      'children' => empty($vars) ? array() : array_combine(
         array_map(array($this, '_dump'), array_keys($vars)),
         array_map(
           function($v) use($self, $nextSeen) {
@@ -184,7 +184,7 @@ class ColoredInspector implements Inspector {
     );
   }
 
-  private function _astToString($node, $indent = 0) {
+  public function _astToString($node, $indent = 0) {
     $children = $node['children'];
     $self     = $this;
 
