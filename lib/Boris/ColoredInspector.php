@@ -15,7 +15,6 @@ namespace Boris;
  * Identifies data types in data structures and syntax highlights them.
  */
 class ColoredInspector implements Inspector {
-  // FIXME: Clean this up
   static $TERM_COLORS = array(
     'black'        => "\033[0;30m",
     'white'        => "\033[1;37m",
@@ -91,15 +90,7 @@ class ColoredInspector implements Inspector {
 
   // -- Private Methods
 
-  private function _dump($value, $indent = 0, $seen = array()) {
-    if (is_object($value) || is_array($value)) {
-      if ($this->_isSeen($value, $seen)) {
-        return $this->_colorize('default', '*** RECURSION ***', $indent);
-      } else {
-        $nextSeen = array_merge($seen, array($value));
-      }
-    }
-
+  private function _dump($value) {
     $tests = array(
       'is_null'    => '_dumpNull',
       'is_string'  => '_dumpString',
@@ -112,87 +103,144 @@ class ColoredInspector implements Inspector {
 
     foreach ($tests as $predicate => $outputMethod) {
       if (call_user_func($predicate, $value))
-        return call_user_func(
-          array($this, $outputMethod),
-          $value,
-          $indent,
-          $nextSeen
-        );
+        return call_user_func(array($this, $outputMethod), $value);
     }
 
     return $this->_fallback->inspect($value);
   }
 
-  private function _dumpNull($value, $indent, $seen) {
-    return $this->_colorize('keyword', 'NULL', $indent);
+  private function _dumpNull($value) {
+    return $this->_colorize('keyword', 'NULL');
   }
 
-  private function _dumpString($value, $indent, $seen) {
-    return $this->_colorize('string', var_export($value, true), $indent);
+  private function _dumpString($value) {
+    return $this->_colorize('string', var_export($value, true));
   }
 
-  private function _dumpBoolean($value, $indent, $seen) {
-    return $this->_colorize('bool', var_export($value, true), $indent);
+  private function _dumpBoolean($value) {
+    return $this->_colorize('bool', var_export($value, true));
   }
 
-  private function _dumpInteger($value, $indent, $seen) {
-    return $this->_colorize('integer', var_export($value, true), $indent);
+  private function _dumpInteger($value) {
+    return $this->_colorize('integer', var_export($value, true));
   }
 
-  private function _dumpFloat($value, $indent, $seen) {
-    return $this->_colorize('float', var_export($value, true), $indent);
+  private function _dumpFloat($value) {
+    return $this->_colorize('float', var_export($value, true));
   }
 
-  private function _dumpArray($value, $indent, $seen) {
-    return $this->_dumpStructure('array', $value, $indent, $seen);
+  private function _dumpArray($value) {
+    return $this->_dumpStructure('array', $value);
   }
 
-  private function _dumpObject($value, $indent, $seen) {
+  private function _dumpObject($value) {
     return $this->_dumpStructure(
       sprintf('object(%s)', get_class($value)),
-      $value,
-      $indent,
-      $seen
+      get_object_vars($value)
     );
   }
 
-  // FIXME: A better algorithm would map the data back as an array, then visit each elem and output the tree.
-  private function _dumpStructure($type, $value, $indent, $seen) {
-    $text = sprintf("%s(\n", $this->_colorize('keyword', $type, $indent));
+  private function _dumpStructure($type, $value) {
+    return $this->_astToString($this->_buildAst($type, $value));
+  }
 
-    foreach ($value as $k => $v) {
-      $text .= sprintf(
-        "%s => %s\n",
-        $this->_dump($k, $indent + 1, $seen),
-        $this->_dump($v, $indent + 1, $seen)
-      );
+  private function _buildAst($type, $value, $seen = array()) {
+    // FIXME: Improve this AST so it doesn't require access to dump() or colorize()
+    if ($this->_isSeen($value, $seen)) {
+      return $this->_colorize('default', '*** RECURSION ***');
+    } else {
+      $nextSeen = array_merge($seen, array($value));
     }
 
-    return sprintf('%s%s)', $text, str_repeat(' ', $indent * 2));
+    if (is_object($value)) {
+      $vars = get_object_vars($value);
+    } else {
+      $vars = $value;
+    }
+
+    $self = $this;
+
+    return array(
+      'name'     => $this->_colorize('keyword', $type),
+      'children' => array_combine(
+        array_map(array($this, '_dump'), array_keys($vars)),
+        array_map(
+          function($v) use($self, $nextSeen) {
+            if (is_object($v)) {
+              return $self->_buildAst(
+                sprintf('object(%s)', get_class($v)),
+                $v,
+                $nextSeen
+              );
+            } elseif (is_array($v)) {
+              return $self->_buildAst('array', $v, $nextSeen);
+            } else {
+              return $self->_dump($v);
+            }
+          },
+          array_values($vars)
+        )
+      )
+    );
+  }
+
+  private function _astToString($node, $indent = 0) {
+    $children = $node['children'];
+    $self     = $this;
+
+    return implode(
+      "\n",
+      array(
+        sprintf('%s(', $node['name']),
+        implode(
+          ",\n",
+          array_map(
+            function($k) use($self, $children, $indent) {
+              if (is_array($children[$k])) {
+                return sprintf(
+                  '%s%s => %s',
+                  str_repeat(' ', ($indent + 1) * 2),
+                  $k,
+                  $self->_astToString($children[$k], $indent + 1)
+                );
+              } else {
+                return sprintf(
+                  '%s%s => %s',
+                  str_repeat(' ', ($indent + 1) * 2),
+                  $k,
+                  $children[$k]
+                );
+              }
+            },
+            array_keys($children)
+          )
+        ),
+        sprintf('%s)', str_repeat(' ', $indent * 2))
+      )
+    );
   }
 
   private function _defaultColorMap() {
     return array(
       'integer' => 'light_green',
       'float'   => 'light_yellow',
-      'string'  => 'light_cyan',
+      'string'  => 'light_red',
       'bool'    => 'light_purple',
-      'keyword' => 'light_purple',
+      'keyword' => 'light_cyan',
       'default' => 'none'
     );
   }
 
-  private function _colorize($type, $value, $indent) {
+  private function _colorize($type, $value) {
     if (!empty($this->_colorMap[$type])) {
-      $color = $this->_colorMap[$type];
+      $colorName = $this->_colorMap[$type];
     } else {
-      $color = $this->_colorMap['default'];
+      $colorName = $this->_colorMap['default'];
     }
 
     return sprintf(
-      "%s%s%s\033[0m",
-      str_repeat(' ', $indent * 2),
-      static::$TERM_COLORS[$color],
+      "%s%s\033[0m",
+      static::$TERM_COLORS[$colorName],
       $value
     );
   }
