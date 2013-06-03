@@ -26,7 +26,7 @@ class Boris {
       ? $historyFile
       : sprintf('%s/.boris_history', getenv('HOME'))
       ;
-    $this->_inspector = new DumpInspector();
+    $this->_inspector = new ColoredInspector();
   }
 
   /**
