@@ -155,8 +155,9 @@ Thanks to [@filp](https://github.com/filp) for this feature!
 ### Customizing the output
 
 After each expression you enter, Boris passes it through an Inspector to get a
-representation that is useful for debugging. The default is just to var_dump() the
-value, but you can change this behaviour.
+representation that is useful for debugging. The default is does some nice
+highlighting of the data types in the value, to make it easier to read at a
+glance, but you can change this behaviour.
 
 Any object that has an `inspect($variable)` method may be used for this purpose.
 
@@ -164,10 +165,9 @@ Any object that has an `inspect($variable)` method may be used for this purpose.
 
 Boris comes with three alternatives out of the box:
 
-  * \Boris\DumpInspector, which uses var_dump() and is the default
+  * \Boris\ColoredInspector, which does data-type highlighting and is the default
+  * \Boris\DumpInspector, which uses a simple, but effective var_dump()
   * \Boris\ExportInspector, which uses var_export()
-  * \Boris\CleanInspector, which tries to intelligently dump each type, and 
-    optionally color-highlights values by type
 
 Note that you can change this from inside the REPL too:
 
