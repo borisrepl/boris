@@ -2,6 +2,10 @@
 
 /* vim: set shiftwidth=2 expandtab softtabstop=2: */
 
+/**
+ * @version 1.0.1
+ */
+
 namespace Boris;
 
 /**
