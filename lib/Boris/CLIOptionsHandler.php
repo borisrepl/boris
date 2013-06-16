@@ -14,7 +14,7 @@ class CLIOptionsHandler {
    * @param Boris $boris
    */
   public function handle($boris) {
-    $args = getopt('hr:', array('help', 'require:'));
+    $args = getopt('hvr:', array('help', 'version', 'require:'));
 
     foreach ($args as $option => $value) {
       switch ($option) {
@@ -33,6 +33,14 @@ class CLIOptionsHandler {
         case 'h':
         case 'help':
           $this->_handleUsageInfo();
+        break;
+
+        /*
+         * Show version
+         */
+        case 'v':
+        case 'version':
+          $this->_handleVersion();
         break;
       }
     }
@@ -64,8 +72,14 @@ boris is a tiny REPL for PHP
 Options:
   -h, --help     show this help message and exit
   -r, --require  a comma-separated list of files to require on startup
+  -v, --version  show Boris version
 
 USAGE;
+    exit(0);
+  }
+
+  private function _handleVersion() {
+    printf("Boris %s\n", BORIS_VERSION);
     exit(0);
   }
 }

@@ -3,6 +3,8 @@
 
 /* vim: set shiftwidth=2 expandtab softtabstop=2: */
 
+define( 'BORIS_VERSION', '1.0.2-alpha' );
+
 require_once __DIR__.'/../lib/autoload.php';
 
 $boris  = new \Boris\Boris();
