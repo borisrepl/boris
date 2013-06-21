@@ -203,7 +203,7 @@ class ShallowParser {
     return substr($input, -1) == ';' && !preg_match(
       '/^(' .
       'echo|print|exit|die|goto|global|include|include_once|require|require_once|list|' .
-      'return|do|for|while|if|function|namespace|class|interface|abstract|switch|' .
+      'return|do|for|foreach|while|if|function|namespace|class|interface|abstract|switch|' .
       'declare|throw|try|unset' .
       ')\b/i',
       $input
