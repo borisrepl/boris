@@ -16,6 +16,7 @@ class Boris {
   private $_historyFile;
   private $_exports = array();
   private $_startHooks = array();
+  private $_failureHooks = array();
   private $_inspector;
 
   /**
@@ -62,6 +63,34 @@ class Boris {
    */
   public function onStart($hook) {
     $this->_startHooks[] = $hook;
+  }
+
+  /**
+   * Add a new hook to run in the context of the REPL when a fatal error occurs.
+   *
+   * @param mixed $hook
+   *
+   * The hook is either a string of PHP code to eval(), or a Closure accepting
+   * the EvalWorker object as its first argument and the array of defined
+   * local variables in the second argument.
+   *
+   * If the hook is a callback and needs to set any local variables in the
+   * REPL's scope, it should invoke $worker->setLocal($var_name, $value) to
+   * do so.
+   *
+   * Hooks are guaranteed to run in the order they were added and the state
+   * set by each hook is available to the next hook (either through global
+   * resources, such as classes and interfaces, or through the 2nd parameter
+   * of the callback, if any local variables were set.
+   *
+   * @example An example if your project requires some database connection cleanup:
+   *
+   *   $boris->onFailure(function($worker, $vars){
+   *     DB::reset();
+   *   });
+   */
+  public function onFailure($hook){
+    $this->_failureHooks[] = $hook;
   }
 
   /**
@@ -139,6 +168,7 @@ class Boris {
       $worker = new EvalWorker($pipes[0]);
       $worker->setLocal($this->_exports);
       $worker->setStartHooks($this->_startHooks);
+      $worker->setFailureHooks($this->_failureHooks);
       $worker->setInspector($this->_inspector);
       $worker->start();
     }

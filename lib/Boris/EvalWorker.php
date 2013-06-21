@@ -17,6 +17,7 @@ class EvalWorker {
   private $_socket;
   private $_exports = array();
   private $_startHooks = array();
+  private $_failureHooks = array();
   private $_ppid;
   private $_pid;
   private $_cancelled;
@@ -58,6 +59,15 @@ class EvalWorker {
   }
 
   /**
+   * Set hooks to run inside the worker after a fatal error is caught.
+   *
+   * @param array $hooks
+   */
+  public function setFailureHooks($hooks) {
+    $this->_failureHooks = $hooks;
+  }
+
+  /**
    * Set an Inspector object for Boris to output return values with.
    *
    * @param object $inspector any object the responds to inspect($v)
@@ -72,7 +82,7 @@ class EvalWorker {
    * This method never returns.
    */
   public function start() {
-    $__scope = $this->_runStartHooks();
+    $__scope = $this->_runHooks($this->_startHooks);
     extract($__scope);
 
     $this->_write($this->_socket, self::READY);
@@ -106,6 +116,7 @@ class EvalWorker {
         if (!$this->_cancelled && $__status != (self::ABNORMAL_EXIT << 8)) {
           $__response = self::EXITED;
         } else {
+          $this->_runHooks($this->_failureHooks);
           $__response = self::FAILED;
         }
       } else {
@@ -161,10 +172,10 @@ class EvalWorker {
 
   // -- Private Methods
 
-  private function _runStartHooks() {
+  private function _runHooks($hooks) {
     extract($this->_exports);
 
-    foreach ($this->_startHooks as $__hook) {
+    foreach ($hooks as $__hook) {
       if (is_string($__hook)) {
         eval($__hook);
       } elseif (is_callable($__hook)) {
