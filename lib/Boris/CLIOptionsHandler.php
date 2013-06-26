@@ -79,7 +79,7 @@ USAGE;
   }
 
   private function _handleVersion() {
-    printf("Boris %s\n", BORIS_VERSION);
+    printf("Boris %s\n", Boris::VERSION);
     exit(0);
   }
 }
