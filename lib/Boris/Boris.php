@@ -2,16 +2,14 @@
 
 /* vim: set shiftwidth=2 expandtab softtabstop=2: */
 
-/**
- * @version 1.0.1
- */
-
 namespace Boris;
 
 /**
  * Boris is a tiny REPL for PHP.
  */
 class Boris {
+  const VERSION = "1.0.1";
+
   private $_prompt;
   private $_historyFile;
   private $_exports = array();
