@@ -8,7 +8,7 @@ require_once __DIR__.'/../lib/autoload.php';
 $boris  = new \Boris\Boris();
 
 $config = new \Boris\Config();
-$config->apply($boris, true);
+$config->apply($boris);
 
 $options = new \Boris\CLIOptionsHandler();
 $options->handle($boris);
