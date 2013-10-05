@@ -209,16 +209,23 @@ class EvalWorker {
 
   private function _read($socket)
   {
-    $read = array($socket);
-    $write = null;
+    $read   = array($socket);
     $except = array($socket);
 
-    if (stream_select($read, $write, $except, 10) > 0) {
+    if ($this->_select($read, $except) > 0) {
       if ($read) {
         return stream_get_contents($read[0]);
       } else if ($except) {
         throw new \UnexpectedValueException("Socket error: closed");
       }
     }
+  }
+
+  private function _select(&$read, &$except) {
+    $write = null;
+    set_error_handler(function(){return true;}, E_WARNING);
+    $result = stream_select($read, $write, $except, 10);
+    restore_error_handler();
+    return $result;
   }
 }
