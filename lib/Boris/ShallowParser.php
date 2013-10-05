@@ -98,7 +98,7 @@ class ShallowParser {
     $combined = array();
 
     foreach ($result->statements as $scope) {
-      if (substr(trim($scope), -1) != ';') {
+      if (trim($scope) == ';' || substr(trim($scope), -1) != ';') {
         $combined[] = ((string) array_pop($combined)) . $scope;
       } else {
         $combined[] = $scope;
@@ -209,7 +209,7 @@ class ShallowParser {
 
   private function _isReturnable($input) {
     $input = trim($input);
-    if (substr($input, -1) == ';') {
+    if (substr($input, -1) == ';' && substr($input, 0, 1) != '{') {
       return $this->_isLambda($input) || !preg_match(
         '/^(' .
         'echo|print|exit|die|goto|global|include|include_once|require|require_once|list|' .
