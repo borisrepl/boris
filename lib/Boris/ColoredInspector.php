@@ -88,6 +88,18 @@ class ColoredInspector implements Inspector {
     return $this->_dump($variable);
   }
 
+  /**
+   * Returns an associative array of an object's properties.
+   *
+   * This method is public so that subclasses may override it.
+   *
+   * @param object $value
+   * @return array
+   * */
+  public function objectVars($value) {
+    return get_object_vars($value);
+  }
+
   // -- Private Methods
 
   public function _dump($value) {
@@ -136,7 +148,7 @@ class ColoredInspector implements Inspector {
   private function _dumpObject($value) {
     return $this->_dumpStructure(
       sprintf('object(%s)', get_class($value)),
-      get_object_vars($value)
+      $this->objectVars($value)
     );
   }
 
