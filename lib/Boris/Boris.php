@@ -8,7 +8,7 @@ namespace Boris;
  * Boris is a tiny REPL for PHP.
  */
 class Boris {
-  const VERSION = "1.0.3";
+  const VERSION = "1.0.4";
 
   private $_prompt;
   private $_historyFile;
