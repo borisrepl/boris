@@ -213,7 +213,13 @@ class EvalWorker {
     $write = null;
     $except = array($socket);
 
-    if (stream_select($read, $write, $except, 10) > 0) {
+
+    $n = @stream_select($read, $write, $except, 10);
+    if ($n === false) {
+      return null;
+    }
+
+    if ($n > 0) {
       if ($read) {
         return stream_get_contents($read[0]);
       } else if ($except) {
