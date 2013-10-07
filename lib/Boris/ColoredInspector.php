@@ -165,7 +165,7 @@ class ColoredInspector implements Inspector {
     }
 
     if (is_object($value)) {
-      $vars = get_object_vars($value);
+      $vars = $this->objectVars($value);
     } else {
       $vars = $value;
     }
