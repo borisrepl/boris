@@ -176,6 +176,25 @@ Note that you can change this from inside the REPL too:
     boris> "Test";
     -> 'Test'
 
+To further customize object output within `\Boris\ColoredInspector`, you may
+subclass and override the `objectVars($value)` method:
+
+    class MyInspector extends \Boris\ColoredInspector {
+        public function objectVars($value) {
+            if ($value instanceof User) {
+                return array('user_id' => $value->getUserId());
+            }
+
+            return parent::objectVars($value);
+        }
+    }
+
+This overrides the default behavior of simply calling [`get_object_vars()`][get_object_vars]
+on the object, allowing you to display properties that may be otherwise obfuscated
+behind magic methods or property visibility.
+
+  [get_object_vars]: http://php.net/get_object_vars
+
 ## Boris doesn't display exceptions or errors when running in my app?
 
 Boris honours your environment. If your application has error handlers
