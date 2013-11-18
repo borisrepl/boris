@@ -95,7 +95,7 @@ class EvalWorker {
 
       $this->_cancelled = false;
 
-      $__input = $this->_read($this->_socket);
+      $__input = $this->_transform($this->_read($this->_socket));
 
       if ($__input === null) {
         continue;
@@ -227,5 +227,21 @@ class EvalWorker {
     $result = stream_select($read, $write, $except, 10);
     restore_error_handler();
     return $result;
+  }
+
+  private function _transform($input) {
+    if ($input === null) {
+      return null;
+    }
+
+    $transforms = array(
+      'exit' => 'exit(0)'
+    );
+
+    foreach ($transforms as $from => $to) {
+      $input = preg_replace('/^\s*' . preg_quote($from, '/') . '\s*;?\s*$/', $to . ';', $input);
+    }
+
+    return $input;
   }
 }
