@@ -14,7 +14,7 @@ you to gradually build up a solution to a problem.
 
 ## Why?
 
-I'm in the process of transitioning away from PHP to Ruby.  I have come to find
+I'm in the process of transitioning away from Ruby to PHP.  I have come to find
 PHP's lack of a real REPL to be frustrating and was not able to find an existing
 implementation that was complete.  Boris weighs in at a few hundred lines of
 fairly straightforward code.
