@@ -25,11 +25,11 @@ fairly straightforward code.
 
 Boris is available for download as a Phar archive:
 
-  - https://github.com/d11wtq/boris/releases/download/v1.0.7/boris.phar
+  - https://github.com/d11wtq/boris/releases/download/v1.0.8/boris.phar
 
 Simply download it and run it.
 
-    curl -O https://github.com/d11wtq/boris/releases/download/v1.0.7/boris.phar
+    curl -O https://github.com/d11wtq/boris/releases/download/v1.0.8/boris.phar
     chmod +x boris.phar
     ./boris.phar
 
