@@ -6,7 +6,7 @@
  * @author Rob Morris <rob@irongaze.com>
  * @author Chris Corbyn <chris@w3style.co.uk>
  *
- * Copyright © 2013 Rob Morris.
+ * Copyright © 2013-2014 Rob Morris.
  */
 
 namespace Boris;

@@ -6,7 +6,7 @@
 /**
  * @author Chris Corbyn <chris@w3style.co.uk>
  *
- * Copyright © 2013 Chris Corbyn.
+ * Copyright © 2013-2014 Chris Corbyn.
  */
 
 /* Generate releases in Github */
