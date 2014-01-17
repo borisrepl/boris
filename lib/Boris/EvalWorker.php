@@ -139,7 +139,7 @@ class EvalWorker {
         }
 
         if (preg_match('/\s*return\b/i', $__input)) {
-          fwrite(STDOUT, sprintf(" → %s\n", $this->_inspector->inspect($__result)));
+          fwrite(STDOUT, sprintf("%s\n", $this->_inspector->inspect($__result)));
         }
         $this->_expungeOldWorker();
       }

@@ -85,7 +85,11 @@ class ColoredInspector implements Inspector {
   }
 
   public function inspect($variable) {
-    return $this->_dump($variable);
+    return preg_replace(
+      '/^/m',
+      $this->_colorize('comment', '// '),
+      $this->_dump($variable)
+    );
   }
 
   /**
@@ -239,6 +243,7 @@ class ColoredInspector implements Inspector {
       'string'  => 'light_red',
       'bool'    => 'light_purple',
       'keyword' => 'light_cyan',
+      'comment' => 'dark_grey',
       'default' => 'none'
     );
   }
