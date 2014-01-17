@@ -25,9 +25,9 @@ fairly straightforward code.
 
 Boris is available for download as a Phar archive:
 
-  - https://github.com/d11wtq/boris/releases/download/v1.0.6/boris.phar
+  - https://github.com/d11wtq/boris/releases/download/v1.0.7/boris.phar
 
-    curl -O https://github.com/d11wtq/boris/releases/download/v1.0.6/boris.phar
+    curl -O https://github.com/d11wtq/boris/releases/download/v1.0.7/boris.phar
     chmod +x boris.phar
     ./boris.phar
 
