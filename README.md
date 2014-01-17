@@ -19,15 +19,34 @@ PHP's lack of a real REPL to be frustrating and was not able to find an existing
 implementation that was complete.  Boris weighs in at a few hundred lines of
 fairly straightforward code.
 
-## Usage
+## Installation
 
-Boris is available via [Packagist](https://packagist.org/packages/d11wtq/boris), or you can use it directly from this repo:
+### 1. As a pre-built phar file
+
+Boris is available for download as a Phar archive:
+
+  - https://github.com/d11wtq/boris/releases/download/v1.0.6/boris.phar
+
+    curl -O https://github.com/d11wtq/boris/releases/download/v1.0.6/boris.phar
+    chmod +x boris.phar
+    ./boris.phar
+
+### 2. Via packagist
+
+For use with composer.
+
+  - https://packagist.org/packages/d11wtq/boris
+
+### 3. Directly from this repo
+
+This is great if you want to stay really up-to-date. I don't commit unstable
+code to master, ever.
 
     git clone git://github.com/d11wtq/boris.git
     cd boris
     ./bin/boris
 
-**Pro Tip**: Add boris to your $PATH for easy access.
+### 4. Build your own phar
 
 You can also build a PHAR file using [Box](http://box-project.org/):
 
@@ -36,8 +55,14 @@ You can also build a PHAR file using [Box](http://box-project.org/):
 This will create a `boris.phar` file. Feel free to move it into your bin
 directory:
 
+    chmod +x boris.phar
     mv boris.phar /usr/local/bin/boris
-    chmod +x /usr/local/bin/boris
+
+### Pro Tip
+
+Add boris to your $PATH for easy access.
+
+## Usage
 
 When Boris starts, you will be at the `boris>` prompt. PHP code you enter at
 this prompt is evaluated.  If an expression spans multiple lines, Boris will
