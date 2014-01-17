@@ -1,4 +1,6 @@
-# Boris: A tiny little, but robust REPL for PHP
+# Boris
+
+A tiny, but robust REPL for PHP.
 
 ![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v3.gif "Quick Demo")
 
