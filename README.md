@@ -335,13 +335,16 @@ a commitment to improve Boris. Now that things have largely stablized with the
 code base, that will initially come in the form of a rewrite that aims to
 satisfy some of the feature requests currently outstanding, like intelligent
 tab-completion, a pluggable API and the ability to use Boris over a network
-connection/socket.
+connection/socket. The primary focus will be on improving the communication
+layer between the user interface of Boris (readline) and the REPL backend
+itself.
 
 The board I'm looking to get is the one pictured above. It's a Tabou Rocket,
 which is a very good board and retails at just under AUD $2300 in Australia.
 
 If you'd like to help get me out and sailing that nice-looking piece of
-equipment, you can send a few bucks my way by Flattring me.
+equipment, in return for improving Boris, you can send a few bucks my way by
+Flattring me.
 
 <a href="http://flattr.com/thing/1327825/d11wtqboris-on-GitHub"
    target="_blank">
@@ -352,6 +355,7 @@ equipment, you can send a few bucks my way by Flattring me.
 </a>
 
 You basically just add some funds to your Flattr account, then Flattr this
-project and anything else you want to distribute those funds over.
+project and anything else you want to distribute those funds over. I receive
+whatever share of funds you gave me at the end of the month.
 
-You rock!
+Hey, by the way, **you rock!**
