@@ -12,7 +12,7 @@ A tiny, but robust REPL for PHP.
 </a> — I'm experimenting using this project to raise funds for a new windsurf
 board. More info [here](#help-me-get-a-new-windsurfing-board).
 
-![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v3.gif "Quick Demo")
+![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v4.gif "Quick Demo")
 
 Python has one. Ruby has one. Clojure has one. Now PHP has one too. Boris is
 PHP's missing REPL (read-eval-print loop), allowing developers to experiment
