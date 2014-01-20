@@ -6,6 +6,7 @@ A tiny, but robust REPL for PHP.
    target="_blank">
   <img src="http://api.flattr.com/button/flattr-badge-large.png"
        alt="Flattr this"
+       valign="middle"
        title="Flattr this"
        border="0" />
 </a> — I'm experimenting using this project to raise funds for a new windsurf
