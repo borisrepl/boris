@@ -2,6 +2,14 @@
 
 A tiny, but robust REPL for PHP.
 
+<a href="http://flattr.com/thing/1327825/d11wtqboris-on-GitHub"
+   target="_blank">
+  <img src="http://api.flattr.com/button/flattr-badge-large.png"
+       alt="Flattr this"
+       title="Flattr this"
+       border="0" />
+</a>
+
 ![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v3.gif "Quick Demo")
 
 Python has one. Ruby has one. Clojure has one. Now PHP has one too. Boris is
@@ -320,7 +328,7 @@ to pay for most of the gear myself. However it would be awesome if the open
 source work I do could in some way contribute towards my "away from the
 computer" fun.
 
-![Tabou Rocket](http://i.imgur.com/LgHKpWg.jpg)
+<img src="http://i.imgur.com/LgHKpWg.jpg" align="center" alt="Tabou Rocket" />
 
 Of course, in return for any hugely gratefully received donations, I will make
 a commitment to improve Boris. Now that things have largely stablized with the
