@@ -8,7 +8,8 @@ A tiny, but robust REPL for PHP.
        alt="Flattr this"
        title="Flattr this"
        border="0" />
-</a>
+</a> — I'm experimenting using this project to raise funds for a new windsurf
+board. More info [here](#help-me-get-a-new-windsurfing-board).
 
 ![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v3.gif "Quick Demo")
 
