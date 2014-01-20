@@ -315,7 +315,7 @@ features (the code is almost entirely dependant on POSIX).
 Boris is written and maintained by Chris Corbyn (@d11wtq). You can use the
 code as you see fit. See the LICENSE file for details.
 
-## Show your support and help me get a new windsurfing board
+## Help me get a new windsurfing board
 
 If you use Boris, and you want to show your appreciation for the hard work that
 goes into making it, you might like to donate towards something I do for fun
