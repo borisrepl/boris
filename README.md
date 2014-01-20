@@ -320,7 +320,7 @@ to pay for most of the gear myself. However it would be awesome if the open
 source work I do could in some way contribute towards my "away from the
 computer" fun.
 
-![Tabou Rocket](http://imgur.com/LgHKpWg)
+![Tabou Rocket](http://i.imgur.com/LgHKpWg.jpg)
 
 Of course, in return for any hugely gratefully received donations, I will make
 a commitment to improve Boris. Now that things have largely stablized with the
