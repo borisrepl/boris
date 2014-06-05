@@ -50,15 +50,16 @@ class ReadlineClient {
 
     for (;;) {
       $this->_clear = false;
-      $line = readline(
-        sprintf(
+
+      echo sprintf(
           '[%d] %s',
           $lineno,
           ($buf == ''
             ? $prompt
             : str_pad('*> ', strlen($prompt), ' ', STR_PAD_LEFT))
-        )
       );
+
+      $line = stream_get_line(STDIN, 1024, PHP_EOL);
 
       if ($this->_clear) {
         $buf = '';
