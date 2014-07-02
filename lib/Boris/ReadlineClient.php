@@ -48,6 +48,15 @@ class ReadlineClient {
     $buf    = '';
     $lineno = 1;
 
+    $auto = new Autocompletion();
+    readline_completion_function(function($string, $index) use ($auto) {
+        $info = readline_info();
+        return $auto->complete(array(
+            'line' => substr($info['line_buffer'], 0, $info['end']),
+            'cursor' => $info['point']
+        ));
+    });
+
     for (;;) {
       $this->_clear = false;
       $line = readline(
