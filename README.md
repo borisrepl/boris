@@ -2,15 +2,10 @@
 
 A tiny, but robust REPL for PHP.
 
-<a href="http://flattr.com/thing/1327825/d11wtqboris-on-GitHub"
-   target="_blank">
-  <img src="http://api.flattr.com/button/flattr-badge-large.png"
-       alt="Flattr this"
-       valign="middle"
-       title="Flattr this"
-       border="0" />
-</a> — I'm experimenting using this project to raise funds for a new windsurf
-board. More info [here](#help-me-get-a-new-windsurfing-board).
+> **Announcement:** I'm looking to add one or two additional collaborators with
+> commit access. If you are actively involved in open source and have a GitHub
+> profile for review, ping me on Twitter (@d11wtq) to express your interest.
+> Experienced developers with active GitHub projects only.
 
 ![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v4.gif "Quick Demo")
 
@@ -316,48 +311,3 @@ features (the code is almost entirely dependant on POSIX).
 
 Boris is written and maintained by Chris Corbyn (@d11wtq). You can use the
 code as you see fit. See the LICENSE file for details.
-
-## Help me get a new windsurfing board
-
-If you use Boris, and you want to show your appreciation for the hard work that
-goes into making it, you might like to donate towards something I do for fun
-in my spare time—windsurfing! I recently took up the sport and have a good set
-of beginner equipment I use, but I'm preparing to move onto a more advanced
-board to learn some more advanced techniques, like planing and carve gybing.
-
-Windsurfing equipment is quite expensive, though I'll be honest, I can afford
-to pay for most of the gear myself. However it would be awesome if the open
-source work I do could in some way contribute towards my "away from the
-computer" fun.
-
-<img src="http://i.imgur.com/LgHKpWg.jpg" align="center" alt="Tabou Rocket" />
-
-Of course, in return for any hugely gratefully received donations, I will make
-a commitment to improve Boris. Now that things have largely stablized with the
-code base, that will initially come in the form of a rewrite that aims to
-satisfy some of the feature requests currently outstanding, like intelligent
-tab-completion, a pluggable API and the ability to use Boris over a network
-connection/socket. The primary focus will be on improving the communication
-layer between the user interface of Boris (readline) and the REPL backend
-itself.
-
-The board I'm looking to get is the one pictured above. It's a Tabou Rocket,
-which is a very good board and retails at just under AUD $2300 in Australia.
-
-If you'd like to help get me out and sailing that nice-looking piece of
-equipment, in return for improving Boris, you can send a few bucks my way by
-Flattring me.
-
-<a href="http://flattr.com/thing/1327825/d11wtqboris-on-GitHub"
-   target="_blank">
-  <img src="http://api.flattr.com/button/flattr-badge-large.png"
-       alt="Flattr this"
-       title="Flattr this"
-       border="0" />
-</a>
-
-You basically just add some funds to your Flattr account, then Flattr this
-project and anything else you want to distribute those funds over. I receive
-whatever share of funds you gave me at the end of the month.
-
-Hey, by the way, **you rock!**
