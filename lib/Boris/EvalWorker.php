@@ -22,6 +22,7 @@ class EvalWorker {
   private $_pid;
   private $_cancelled;
   private $_inspector;
+  private $_macros;
   private $_exceptionHandler;
 
   /**
@@ -33,6 +34,32 @@ class EvalWorker {
     $this->_socket    = $socket;
     $this->_inspector = new DumpInspector();
     stream_set_blocking($socket, 0);
+    $this->initBuiltinMacros();
+  }
+
+  private function initBuiltinMacros() {
+    $this->addUseMacro();
+  }
+
+  private function addUseMacro() {
+    $this->_macros['/^\s*use ([\w\s,_\\\]+?);\s*/i'] = function ($match) {
+      $stmt = $match[1];
+      if (($asPosition = stripos($stmt, ' as ')) !== false) {
+        $class   = substr($stmt, 0, $asPosition);
+        $aliases = substr($stmt, $asPosition + 4);
+        $aliases = explode(',', $aliases);
+      } else {
+        $class   = $stmt;
+        $alias   = substr($class, strrpos($class, '\\') + 1);
+        $aliases = array($alias);
+      }
+      $output = '';
+      $class  = trim($class);
+      foreach ($aliases as $alias) {
+        $output .= sprintf("class_alias('%s', '%s');", $class, trim($alias));
+      }
+      return $output;
+    };
   }
 
   /**
@@ -74,6 +101,15 @@ class EvalWorker {
    */
   public function setInspector($inspector) {
     $this->_inspector = $inspector;
+  }
+
+  /**
+   * Set an Inspector object for Boris to output return values with.
+   *
+   * @param array $macros A set of k=>v pairs, containing regex => replacer.
+   */
+  public function addMacros($macros) {
+    $this->_macros = array_merge($this->_macros, $macros);
   }
 
   /**
@@ -234,12 +270,12 @@ class EvalWorker {
       return null;
     }
 
-    $transforms = array(
-      'exit' => 'exit(0)'
-    );
-
-    foreach ($transforms as $from => $to) {
-      $input = preg_replace('/^\s*' . preg_quote($from, '/') . '\s*;?\s*$/', $to . ';', $input);
+    foreach ($this->_macros as $pattern => $replacer) {
+      if (is_string($replacer)) {
+        $input = preg_replace($pattern, $replacer, $input);
+      } else {
+        $input = preg_replace_callback($pattern, $replacer, $input);
+      }
     }
 
     return $input;

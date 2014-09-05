@@ -214,7 +214,7 @@ class ShallowParser {
         '/^(' .
         'echo|print|exit|die|goto|global|include|include_once|require|require_once|list|' .
         'return|do|for|foreach|while|if|function|namespace|class|interface|abstract|switch|' .
-        'declare|throw|try|unset' .
+        'declare|throw|try|unset|use' .
         ')\b/i',
         $input
       );
