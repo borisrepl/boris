@@ -45,6 +45,11 @@ Simply download it and run it.
 For use with composer.
 
   - https://packagist.org/packages/d11wtq/boris
+  
+Can be installed globally via:
+  
+    composer global require 'd11wtq/boris=1.0.*'
+    ~/.composer/vendor/bin/boris
 
 ### 3. Directly from this repo
 
