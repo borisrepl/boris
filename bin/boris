@@ -5,6 +5,10 @@
 
 require_once __DIR__.'/../lib/autoload.php';
 
+if (!function_exists('pcntl_signal')) {
+    die("PCNTL support seems to be missing or disabled. See https://github.com/d11wtq/boris/issues/29 for details\n");
+}
+
 $boris  = new \Boris\Boris();
 
 $config = new \Boris\Config();
