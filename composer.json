@@ -2,11 +2,9 @@
     "name": "d11wtq/boris",
     "require": {
         "php": ">=5.3.0"
-    },
-    "suggest": {
-        "ext-readline": "Optional readline extension depencency",
-        "ext-pcntl": "Optional Process Control extension depencency",
-        "ext-posix": "Optional POSIX extension"
+        "ext-readline": "*",
+        "ext-pcntl": "*",
+        "ext-posix": "*"
     },
     "autoload": {
         "psr-0": {"Boris": "lib"}
