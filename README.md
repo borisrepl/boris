@@ -38,7 +38,7 @@ Simply download it and run it.
 
     curl -L -O https://github.com/d11wtq/boris/releases/download/v1.0.8/boris.phar
     chmod +x boris.phar
-    ./boris.phar
+    sudo mv boris.phar /usr/local/bin/boris
 
 ### 2. Via packagist
 
