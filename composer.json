@@ -1,5 +1,6 @@
 {
     "name": "d11wtq/boris",
+    "description": "A tiny, but robust REPL (Read-Evaluate-Print-Loop) for PHP.",
     "require": {
         "php": ">=5.3.0",
         "ext-readline": "*",
