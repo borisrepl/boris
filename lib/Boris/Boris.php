@@ -16,6 +16,7 @@ class Boris {
   private $_startHooks = array();
   private $_failureHooks = array();
   private $_inspector;
+  private $_macros = array();
 
   /**
    * Create a new REPL, which consists of an evaluation worker and a readline client.
@@ -132,6 +133,16 @@ class Boris {
   }
 
   /**
+   * Set an Macro pattern for Boris to transform input expressions.
+   *
+   * @param string $match A regex pattern to compare against input expressions.
+   * @param string|callable $replacer A replacer string or callback function.
+   */
+  public function setMacro($match, $replacer) {
+    $this->_macros[$match] = $replacer;
+  }
+
+  /**
    * Start the REPL (display the readline prompt).
    *
    * This method never returns.
@@ -168,6 +179,7 @@ class Boris {
       $worker->setStartHooks($this->_startHooks);
       $worker->setFailureHooks($this->_failureHooks);
       $worker->setInspector($this->_inspector);
+      $worker->addMacros($this->_macros);
       $worker->start();
     }
   }
