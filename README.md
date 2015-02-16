@@ -314,5 +314,5 @@ features (the code is almost entirely dependant on POSIX).
 
 ## Copyright & Licensing
 
-Boris is written and maintained by Chris Corbyn (@d11wtq). You can use the
+Boris is maintained by Chris Corbyn [(@d11wtq)](https://github.com/d11wtq) and Tejas Manohar [@tejasmanohar](https://github.com/tejasmanohar). You can use the
 code as you see fit. See the LICENSE file for details.
