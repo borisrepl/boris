@@ -22,7 +22,7 @@ class EvalWorker {
   private $_pid;
   private $_cancelled;
   private $_inspector;
-  private $_exceptionHandler;
+  private $_userExceptionHandler;
 
   /**
    * Create a new worker using the given socket for communication.
@@ -120,9 +120,15 @@ class EvalWorker {
           $__response = self::FAILED;
         }
       } else {
-        // user exception handlers normally cause a clean exit, so Boris will exit too
-        if (!$this->_exceptionHandler =
-          set_exception_handler(array($this, 'delegateExceptionHandler'))) {
+        // if the user has installed a custom exception handler, install a new
+        // one which calls it and then (if the custom handler didn't already exit)
+        // exits with the correct status.
+        // If not, leave the exception handler unset; we'll display
+        // an uncaught exception error and carry on.
+        $__oldexh = set_exception_handler(array($this, 'delegateExceptionHandler'));
+        if ($__oldexh && !$this->_userExceptionHandler) {
+          $this->_userExceptionHandler = $__oldexh;  // save the old handler (once)
+        } else {
           restore_exception_handler();
         }
 
@@ -163,10 +169,10 @@ class EvalWorker {
   }
 
   /**
-   * If any user-defined exception handler is present, call it, but be sure to exit correctly.
+   * Call the user-defined exception handler, then exit correctly.
    */
   public function delegateExceptionHandler($ex) {
-    call_user_func($this->_exceptionHandler, $ex);
+    call_user_func($this->_userExceptionHandler, $ex);
     exit(self::ABNORMAL_EXIT);
   }
 
