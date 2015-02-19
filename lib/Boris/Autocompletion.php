@@ -45,7 +45,7 @@ class Autocompletion {
         /**
          * TODO: Find a way to access EvalWorker context/scope to access vars
          */
-        return ['this', 'container'];
+        return array('this', 'container');
     }
 
 }
