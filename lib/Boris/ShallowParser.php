@@ -47,7 +47,7 @@ class ShallowParser {
         }
       }
 
-      $rules = array('_scanEscapedChar', '_scanRegion', '_scanStateEntrant', '_scanWsp', '_scanChar');
+      $rules = array('_scanUse', '_scanEscapedChar', '_scanRegion', '_scanStateEntrant', '_scanWsp', '_scanChar');
 
       foreach ($rules as $method) {
         if ($this->$method($result)) {
@@ -198,6 +198,22 @@ class ShallowParser {
     }
 
     return true;
+  }
+
+  private function _scanUse($result) {
+    if (preg_match("/^use (.+?);/", $result->buffer, $use)) {
+      $result->buffer = substr($result->buffer, strlen($use[0]));
+      if(strpos($use[0], ' as ') !== false){
+        list($class, $alias) = explode(' as ', $use[1]);
+      }else{
+        $class = $use[1];
+        $alias = substr($use[1], strrpos($use[1], '\\') + 1);
+      }
+      $result->statements[] = sprintf("class_alias('%s', '%s');", $class, $alias);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   private function _isLambda($input) {
