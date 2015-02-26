@@ -5,7 +5,7 @@
 namespace Boris;
 
 class Autocompletion {
-    private $symbols = [];
+    private $symbols = array();
 
     public function __construct() {
     }
