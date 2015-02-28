@@ -1,8 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-/* vim: set shiftwidth=2 expandtab softtabstop=2: */
-
 /**
  * @author Chris Corbyn <chris@w3style.co.uk>
  *

@@ -1,7 +1,5 @@
 <?php
 
-/* vim: set shiftwidth=2 expandtab softtabstop=2: */
-
 /**
  * @author Rob Morris <rob@irongaze.com>
  * @author Chris Corbyn <chris@w3style.co.uk>
