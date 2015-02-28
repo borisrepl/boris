@@ -59,7 +59,7 @@ This package was originally developed by [Chris Corbyn](https://github.com/d11wt
 
 See the [LICENSE] file for details.
 
-[LICENSE](https://github.com/d11wtq/boris/blob/master/LICENSE)
+[LICENSE]: https://github.com/d11wtq/boris/blob/master/LICENSE)
 [wiki]: https://github.com/d11wtq/boris/wiki
 [contributing]: https://github.com/d11wtq/boris/blob/master/CONTRIBUTING.md
 [Chris Corbyn]: https://github.com/d11wtq
