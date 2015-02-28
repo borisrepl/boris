@@ -1,14 +1,12 @@
 {
     "files": ["LICENSE"],
-    "finder": [
-        {
-            "name": "*.php",
-            "exclude": [
-                "tests"
-            ],
-            "in": "lib"
-        }
-    ],
+    "finder": [{
+        "name": "*.php",
+        "exclude": [
+            "tests"
+        ],
+        "in": "lib"
+    }],
     "git-version": "git_tag",
     "main": "bin/boris",
     "output": "boris.phar",
