@@ -9,7 +9,9 @@
         "ext-posix": "*"
     },
     "autoload": {
-        "psr-0": {"Boris": "lib"}
+        "psr-0": {
+            "Boris": "lib"
+        }
     },
     "bin": ["bin/boris"]
 }
