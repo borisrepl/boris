@@ -9,7 +9,7 @@ A tiny, but robust REPL for PHP.
 
 ![Demo](http://dl.dropbox.com/u/508607/BorisDemo-v4.gif "Quick Demo")
 
-Python has one. Ruby has one. Clojure has one. Now PHP has one too. Boris is
+Python has one. Ruby has one. Clojure has one. Now PHP has one, too. Boris is
 PHP's missing REPL (read-eval-print loop), allowing developers to experiment
 with PHP code in the terminal in an interactive manner.  If you make a mistake,
 it doesn't matter, Boris will report the error and stand to attention for
