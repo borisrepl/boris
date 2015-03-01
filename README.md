@@ -44,12 +44,12 @@ Before jumping in, check out our **[Contributing] [contributing]** page on the w
 
 This package was originally developed by [Chris Corbyn](https://github.com/d11wtq), but the team has expanded.
 
-**Chris Corbyn - Maintainer**
+**Chris Corbyn**
 
 - <https://twitter.com/d11wtq>
 - <https://github.com/d11wtq>
 
-**Tejas Manohar - Collaborator**
+**Tejas Manohar**
 
 - <https://twitter.com/tejasmanohar>
 - <https://github.com/tejasmanohar>
