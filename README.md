@@ -42,8 +42,6 @@ Before jumping in, check out our **[Contributing] [contributing]** page on the w
 
 ## Core Team
 
-This package was originally developed by [Chris Corbyn](https://github.com/d11wtq), but the team has expanded.
-
 **Chris Corbyn**
 
 - <https://twitter.com/d11wtq>
