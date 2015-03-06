@@ -51,7 +51,6 @@ Before jumping in, check out our **[Contributing] [contributing]** page on the w
 
 - <https://twitter.com/tejasmanohar>
 - <https://github.com/tejasmanohar>
-- 
 
 **Dennis Hotson**
 
