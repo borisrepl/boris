@@ -19,6 +19,7 @@ Everything you enter into Boris is evaluated and the result inspected so you
 can understand what is happening.  State is maintained between inputs, allowing
 you to gradually build up a solution to a problem.
 
+> __Note:__ The PCNTL function which is required to run Boris is not available on Windows platforms.
 
 ## Why?
 
