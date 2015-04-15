@@ -63,7 +63,7 @@ Before jumping in, check out our **[Contributing] [contributing]** page on the w
 
 See the [LICENSE] file for details.
 
-[LICENSE]: https://github.com/borisrepl/boris/blob/master/LICENSE)
+[LICENSE]: https://github.com/borisrepl/boris/blob/master/LICENSE
 [wiki]: https://github.com/borisrepl/boris/wiki
 [contributing]: https://github.com/borisrepl/boris/blob/master/CONTRIBUTING.md
 [Chris Corbyn]: https://github.com/borisrepl
