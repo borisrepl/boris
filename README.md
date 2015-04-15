@@ -43,21 +43,7 @@ Before jumping in, check out our **[Contributing] [contributing]** page on the w
 
 ## Core Team
 
-**Chris Corbyn**
-
-- <https://twitter.com/d11wtq>
-- <https://github.com/d11wtq>
-
-**Tejas Manohar**
-
-- <https://twitter.com/tejasmanohar>
-- <https://github.com/tejasmanohar>
-
-**Dennis Hotson**
-
-- <https://twitter.com/dennishotson>
-- <https://github.com/dhotson>
-
+This module was originally developed by [Chris Corbyn](https://github.com/d11wtq), and is now maintained by pTejas Manohar](https://github.com/tejasmanohar), [Dennis Hotson](https://github.com/dhotson), and [other wonderful contributors](https://github.com/borisrepl/boris/graphs/contributors).
 
 ## Copyright & Licensing
 
