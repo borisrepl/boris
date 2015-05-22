@@ -7,7 +7,7 @@ namespace Boris;
  */
 class Boris
 {
-    const VERSION = "1.0.8";
+    const VERSION = "1.0.10";
     
     private $_prompt;
     private $_historyFile;
