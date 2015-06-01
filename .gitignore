@@ -2,3 +2,8 @@
 *.swp
 boris.phar
 .token
+
+# Testing #
+###########
+/reports/
+/tests/test_credentials.php
