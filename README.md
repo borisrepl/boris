@@ -2,6 +2,10 @@
 
 A tiny, but robust REPL for PHP.
 
+[![Code Climate](https://codeclimate.com/github/borisrepl/boris/badges/gpa.svg)](https://codeclimate.com/github/borisrepl/boris)
+[![Build Status](https://travis-ci.org/wogsland/boris.svg?branch=travis)](https://travis-ci.org/wogsland/boris)
+
+
 > **Announcement:** I'm looking to add one or two additional collaborators with
 > commit access. If you are actively involved in open source and have a GitHub
 > profile for review, ping me on Twitter (@d11wtq) to express your interest.
