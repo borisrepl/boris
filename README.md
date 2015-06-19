@@ -3,7 +3,7 @@
 A tiny, but robust REPL for PHP.
 
 [![Code Climate](https://codeclimate.com/github/borisrepl/boris/badges/gpa.svg)](https://codeclimate.com/github/borisrepl/boris)
-[![Build Status](https://travis-ci.org/wogsland/boris.svg?branch=travis)](https://travis-ci.org/wogsland/boris)
+[![Build Status](https://travis-ci.org/borisrepl/boris.svg?branch=master)](https://travis-ci.org/borisrepl/boris)
 
 
 > **Announcement:** I'm looking to add one or two additional collaborators with
