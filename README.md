@@ -44,6 +44,11 @@ We're committed to a loosely-coupled architecture for Boris and would love to ge
 
 Before jumping in, check out our **[Contributing] [contributing]** page on the wiki!
 
+## Contributing
+
+We're using [PHPUnit](https://phpunit.de/) for testing. To run all the tests,
+
+    phpunit --bootstrap tests/autoload.php -c tests.xml
 
 ## Core Team
 
