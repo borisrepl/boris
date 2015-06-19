@@ -6,4 +6,3 @@ boris.phar
 # Testing #
 ###########
 /reports/
-/tests/test_credentials.php
