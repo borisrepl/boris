@@ -2,6 +2,10 @@
 
 A tiny, but robust REPL for PHP.
 
+[![Code Climate](https://codeclimate.com/github/borisrepl/boris/badges/gpa.svg)](https://codeclimate.com/github/borisrepl/boris)
+[![Build Status](https://travis-ci.org/borisrepl/boris.svg?branch=master)](https://travis-ci.org/borisrepl/boris)
+
+
 > **Announcement:** I'm looking to add one or two additional collaborators with
 > commit access. If you are actively involved in open source and have a GitHub
 > profile for review, ping me on Twitter (@d11wtq) to express your interest.
@@ -40,6 +44,11 @@ We're committed to a loosely-coupled architecture for Boris and would love to ge
 
 Before jumping in, check out our **[Contributing] [contributing]** page on the wiki!
 
+## Contributing
+
+We're using [PHPUnit](https://phpunit.de/) for testing. To run all the tests,
+
+    phpunit --bootstrap tests/autoload.php -c tests.xml
 
 ## Core Team
 
