@@ -18,5 +18,3 @@ require_once(__DIR__.'/../lib/autoload.php');
 
 // Set timezone for date functions
 date_default_timezone_set('America/Chicago');
-
-require (__DIR__.'/test_credentials.php');
