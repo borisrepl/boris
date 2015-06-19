@@ -7,7 +7,3 @@ php:
   - hhvm
   - nightly
 script: phpunit --bootstrap tests/autoload.php -c tests.xml
-notifications:
-  email:
-    on_success: change
-    on_failure: change
