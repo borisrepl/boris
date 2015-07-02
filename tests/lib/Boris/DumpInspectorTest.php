@@ -32,7 +32,7 @@ extends \PHPUnit_Framework_TestCase
       // random float
       $variable = (float) rand();
       $test = $DumpInspector->inspect($variable);
-      //$this->assertEquals(" → float($variable)", $test);
+      $this->assertEquals(" → float($variable)", $test);
 
       // random array
       $k = rand();
