@@ -108,6 +108,15 @@ extends \PHPUnit_Framework_TestCase
      * Tests the loadedFiles method.
      */
     public function test_loadedFiles () {
-
+      $test_file_to_apply = getcwd() . '/tests/requirable.php';
+      $test_file_to_apply2 = getcwd() . '/tests/requirable2.php';
+      $test_file_to_apply3 ='/this/path/is/fake/and/will/fail';
+      $files = array($test_file_to_apply, $test_file_to_apply2, $test_file_to_apply3);
+      $Config = new Config($files, true);
+      $Config->apply();
+      $files = $Config->loadedFiles();
+      $this->assertEquals(2, count($files));
+      $this->assertEquals($test_file_to_apply, $files[0]);
+      $this->assertEquals($test_file_to_apply2, $files[1]);
     }
 }
