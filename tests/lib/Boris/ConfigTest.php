@@ -44,7 +44,7 @@ extends \PHPUnit_Framework_TestCase
      */
     public function test_constructor_params () {
       // test of good parameters
-      $path1 = '/path/tp/awesome';
+      $path1 = '/path/to/awesome';
       $path2 = '/dev/random';
       $Config = new Config(array($path1, $path2), true);
 
