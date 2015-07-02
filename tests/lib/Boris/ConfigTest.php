@@ -60,6 +60,28 @@ extends \PHPUnit_Framework_TestCase
       $this->assertContains('[1] => ' . $path2, $class);
       $this->assertContains('[_cascade:Boris\Config:private] => 1', $class);
       $this->assertContains('[_files:Boris\Config:private] => Array', $class);
+
+      // test of bad params
+      $Config = new Config('not an array', 27);
+
+      // since all the class variables are private...
+      ob_start();
+      print_r($Config);
+      $class = ob_get_contents();
+      ob_end_clean();
+
+      // check class vars exist
+      $this->assertContains('[_searchPaths:Boris\Config:private] => Array', $class);
+      $this->assertContains('[_cascade:Boris\Config:private]', $class);
+      $this->assertContains('[_files:Boris\Config:private] => Array', $class);
+
+      // check _searchPaths are initialized properly
+      $pwd = getcwd() . '/.borisrc';
+      $this->assertContains('] => ' . $pwd, $class);
+      if (getenv('HOME')) {
+          $home = getenv('HOME').'/.borisrc';
+          $this->assertContains('[0] => ' . $home, $class);
+      }
     }
 
     /**

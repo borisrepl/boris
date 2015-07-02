@@ -27,7 +27,7 @@ class Config
         $this->_cascade     = (bool) $cascade;
         $this->_searchPaths = is_array($searchPaths) ? $searchPaths : null;
 
-        if (is_null($searchPaths)) {
+        if (is_null($this->_searchPaths)) {
             $this->_searchPaths = array();
 
             if ($userHome = getenv('HOME')) {
