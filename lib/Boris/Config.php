@@ -28,13 +28,13 @@ class Config
         $this->_searchPaths = is_array($searchPaths) ? $searchPaths : null;
 
         if (is_null($searchPaths)) {
-            $searchPaths = array();
+            $this->_searchPaths = array();
 
             if ($userHome = getenv('HOME')) {
-                $searchPaths[] = "{$userHome}/.borisrc";
+                $this->_searchPaths[] = "{$userHome}/.borisrc";
             }
 
-            $searchPaths[] = getcwd() . '/.borisrc';
+            $this->_searchPaths[] = getcwd() . '/.borisrc';
         }
     }
 

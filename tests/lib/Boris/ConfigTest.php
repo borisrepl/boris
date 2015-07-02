@@ -32,10 +32,10 @@ extends \PHPUnit_Framework_TestCase
 
       // check _searchPaths are initialized properly
       $pwd = getcwd() . '/.borisrc';
-      $this->assertContains('] => '.$pwd, $class);
+      $this->assertContains('] => ' . $pwd, $class);
       if (getenv('HOME')) {
           $home = getenv('HOME').'/.borisrc';
-          $this->assertContains('[0] => '.$home, $class);
+          $this->assertContains('[0] => ' . $home, $class);
       }
     }
 
@@ -48,7 +48,18 @@ extends \PHPUnit_Framework_TestCase
       $path2 = '/dev/random';
       $Config = new Config(array($path1, $path2), true);
 
+      // since all the class variables are private...
+      ob_start();
       print_r($Config);
+      $class = ob_get_contents();
+      ob_end_clean();
+
+      // check class vars exist
+      $this->assertContains('[_searchPaths:Boris\Config:private] => Array', $class);
+      $this->assertContains('[0] => ' . $path1, $class);
+      $this->assertContains('[1] => ' . $path2, $class);
+      $this->assertContains('[_cascade:Boris\Config:private] => 1', $class);
+      $this->assertContains('[_files:Boris\Config:private] => Array', $class);
     }
 
     /**
