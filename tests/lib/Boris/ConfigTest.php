@@ -43,7 +43,12 @@ extends \PHPUnit_Framework_TestCase
      * Tests the constructor with parameters.
      */
     public function test_constructor_params () {
+      // test of good parameters
+      $path1 = '/path/tp/awesome';
+      $path2 = '/dev/random';
+      $Config = new Config(array($path1, $path2), true);
 
+      print_r($Config);
     }
 
     /**

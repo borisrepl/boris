@@ -10,7 +10,7 @@ class Config
     private $_searchPaths;
     private $_cascade = false;
     private $_files = array();
-    
+
     /**
      * Create a new Config instance, optionally with an array
      * of paths to search for configuration files.
@@ -24,20 +24,20 @@ class Config
      */
     public function __construct($searchPaths = null, $cascade = false)
     {
+        $this->_cascade     = (bool) $cascade;
+        $this->_searchPaths = is_array($searchPaths) ? $searchPaths : null;
+
         if (is_null($searchPaths)) {
             $searchPaths = array();
-            
+
             if ($userHome = getenv('HOME')) {
                 $searchPaths[] = "{$userHome}/.borisrc";
             }
-            
+
             $searchPaths[] = getcwd() . '/.borisrc';
         }
-        
-        $this->_cascade     = $cascade;
-        $this->_searchPaths = $searchPaths;
     }
-    
+
     /**
      * Searches for configuration files in the available
      * search paths, and applies them to the provided
@@ -51,23 +51,23 @@ class Config
     public function apply(Boris $boris)
     {
         $applied = false;
-        
+
         foreach ($this->_searchPaths as $path) {
             if (is_readable($path)) {
                 $this->_loadInIsolation($path, $boris);
-                
+
                 $applied        = true;
                 $this->_files[] = $path;
-                
+
                 if (!$this->_cascade) {
                     break;
                 }
             }
         }
-        
+
         return $applied;
     }
-    
+
     /**
      * Returns an array of files that were loaded
      * for this Config
@@ -78,9 +78,9 @@ class Config
     {
         return $this->_files;
     }
-    
+
     // -- Private Methods
-    
+
     private function _loadInIsolation($path, $boris)
     {
         require $path;
