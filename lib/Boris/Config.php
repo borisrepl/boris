@@ -45,10 +45,9 @@ class Config
      *
      * Returns true if any configuration files were found.
      *
-     * @param  Boris\Boris $boris
      * @return bool
      */
-    public function apply(Boris $boris)
+    public function apply()
     {
         $applied = false;
 
