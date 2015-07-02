@@ -54,7 +54,7 @@ class Config
 
         foreach ($this->_searchPaths as $path) {
             if (is_readable($path)) {
-                $this->_loadInIsolation($path, $boris);
+                $this->_loadInIsolation($path);
 
                 $applied        = true;
                 $this->_files[] = $path;
@@ -81,7 +81,7 @@ class Config
 
     // -- Private Methods
 
-    private function _loadInIsolation($path, $boris)
+    private function _loadInIsolation($path)
     {
         require $path;
     }
