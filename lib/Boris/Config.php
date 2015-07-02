@@ -40,8 +40,7 @@ class Config
 
     /**
      * Searches for configuration files in the available
-     * search paths, and applies them to the provided
-     * boris instance.
+     * search paths, and applies them.
      *
      * Returns true if any configuration files were found.
      *

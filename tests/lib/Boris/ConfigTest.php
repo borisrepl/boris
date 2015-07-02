@@ -88,7 +88,20 @@ extends \PHPUnit_Framework_TestCase
      * Tests the apply method.
      */
     public function test_apply () {
+      //setup
+      $test_file_to_apply = getcwd() . '/tests/requirable.php';
+      $test_file_to_apply2 = getcwd() . '/tests/requirable2.php';
+      $files = array($test_file_to_apply, $test_file_to_apply2);
 
+      // without cascade
+      $Config = new Config($files);
+      $Config->apply();
+      $this->assertEquals(getenv('REQUIRED_MESSAGE'), 'You successfully required the file!');
+
+      // with cascade
+      $Config = new Config($files, true);
+      $Config->apply();
+      $this->assertEquals(getenv('REQUIRED_MESSAGE'), 'You successfully required the 2nd file!');
     }
 
     /**
