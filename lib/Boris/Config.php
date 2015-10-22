@@ -44,15 +44,16 @@ class Config
      *
      * Returns true if any configuration files were found.
      *
+     * @param  Boris\Boris $boris
      * @return bool
      */
-    public function apply()
+    public function apply(Boris $boris)
     {
         $applied = false;
 
         foreach ($this->_searchPaths as $path) {
             if (is_readable($path)) {
-                $this->_loadInIsolation($path);
+                $this->_loadInIsolation($path, $boris);
 
                 $applied        = true;
                 $this->_files[] = $path;
@@ -79,7 +80,7 @@ class Config
 
     // -- Private Methods
 
-    private function _loadInIsolation($path)
+    private function _loadInIsolation($path, $boris)
     {
         require $path;
     }
