@@ -214,18 +214,28 @@ class ShallowParser
         
         return true;
     }
-    
+
     private function _scanUse($result)
     {
-        if (preg_match("/^use (.+?);/", $result->buffer, $use)) {
+        if (preg_match("/^use (?P<type>function |const )?(?P<name>.+?)( as (?P<alias>.+?))?;/", $result->buffer, $use)) {
             $result->buffer = substr($result->buffer, strlen($use[0]));
-            if (strpos($use[0], ' as ') !== false) {
-                list($class, $alias) = explode(' as ', $use[1]);
-            } else {
-                $class = $use[1];
-                $alias = substr($use[1], strrpos($use[1], '\\') + 1);
+
+            if (! isset($use['alias']) || strlen($use['alias']) == 0) {
+                $use['alias'] = substr($use['name'], strrpos($use['name'], '\\') + 1);
             }
-            $result->statements[] = sprintf("class_alias('%s', '%s');", $class, $alias);
+
+            switch(trim($use['type'])) {
+                case 'function':
+                    $result->statements[] = sprintf("function %s() { return call_user_func_array('%s', func_get_args()); };", $use['alias'], $use['name']);
+                    break;
+                case 'const':
+                    $result->statements[] = sprintf("define('%s', %s);", $use['alias'], $use['name']);
+                    break;
+                default:
+                    $result->statements[] = sprintf("class_alias('%s', '%s');", $use['name'], $use['alias']);
+                    break;
+            }
+
             return true;
         } else {
             return false;
