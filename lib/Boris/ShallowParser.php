@@ -217,7 +217,17 @@ class ShallowParser
     
     private function _scanUse($result)
     {
-        if (preg_match("/^use (.+?);/", $result->buffer, $use)) {
+        if (preg_match("/^use function (.+?);/", $result->buffer, $use)) {
+            $result->buffer = substr($result->buffer, strlen($use[0]));
+            if (strpos($use[0], ' as ') !== false) {
+                list($function, $alias) = explode(' as ', $use[1]);
+            } else {
+                $function = $use[1];
+                $alias = substr($use[1], strrpos($use[1], '\\') + 1);
+            }
+            $result->statements[] = sprintf("function %s() { return call_user_func_array('%s', func_get_args()); };", $alias, $function);
+            return true;
+        } else if (preg_match("/^use (.+?);/", $result->buffer, $use)) {
             $result->buffer = substr($result->buffer, strlen($use[0]));
             if (strpos($use[0], ' as ') !== false) {
                 list($class, $alias) = explode(' as ', $use[1]);
