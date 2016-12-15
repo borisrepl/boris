@@ -12,6 +12,25 @@ class EvalWorker
     const EXITED = "\1";
     const FAILED = "\2";
     const READY = "\3";
+
+    const D_VARS       = 'vars';
+    const D_VARS_TYPE  = 'type';
+    const D_VARS_CLASS = 'class';
+    const D_CLASSES    = 'classes';
+    const D_FUNCTIONS  = 'functions';
+
+    const INTERNAL_VARS = [
+        'baseVars'   => true,
+        '__scope'    => true,
+        'hooks'      => true,
+        '__hook'     => true,
+        '__input'    => true,
+        '__response' => true,
+        '__oldexh'   => true,
+        '__pid'      => true,
+        '__result'   => true,
+        '__hasError' => true,
+    ];
     
     private $_socket;
     private $_exports = array();
@@ -22,7 +41,7 @@ class EvalWorker
     private $_cancelled;
     private $_inspector;
     private $_userExceptionHandler;
-    
+
     /**
      * Create a new worker using the given socket for communication.
      *
@@ -89,11 +108,13 @@ class EvalWorker
      */
     public function start()
     {
+        $baseVars = get_defined_vars();
+
         $__scope = $this->_runHooks($this->_startHooks);
         extract($__scope);
         
         $this->_write($this->_socket, self::READY);
-        
+        $this->_sendDeclaredStuff($this->_socket, $baseVars, get_defined_vars());
         /* Note the naming of the local variables due to shared scope with the user here */
         for (;;) {
             declare (ticks = 1);
@@ -148,8 +169,19 @@ class EvalWorker
                 // undo ctrl-c signal handling ready for user code execution
                 pcntl_signal(SIGINT, SIG_DFL, true);
                 $__pid = posix_getpid();
-                
-                $__result = eval($__input);
+
+                $__result = null;
+                $__hasError = false;
+                try {
+                    $__result = eval($__input);
+                } catch(\Throwable $t) {
+                    $__hasError = true;
+                    while($t) {
+                        fwrite(STDERR,  $t->getMessage().PHP_EOL);
+                        fwrite(STDERR,  $t->getTraceAsString().PHP_EOL);
+                        $t = $t->getPrevious();
+                    }
+                }
                 
                 if (posix_getpid() != $__pid) {
                     // whatever the user entered caused a forked child
@@ -157,7 +189,7 @@ class EvalWorker
                     exit(0);
                 }
                 
-                if (preg_match('/\s*return\b/i', $__input)) {
+                if (!$__hasError && preg_match('/\s*return\b/i', $__input)) {
                     fwrite(STDOUT, sprintf("%s\n", $this->_inspector->inspect($__result)));
                 }
                 $this->_expungeOldWorker();
@@ -168,6 +200,10 @@ class EvalWorker
             if ($__response == self::EXITED) {
                 exit(0);
             }
+            if($__response == self::DONE) {
+                $this->_sendDeclaredStuff($this->_socket, $baseVars, get_defined_vars());
+            }
+
         }
     }
     
@@ -242,6 +278,8 @@ class EvalWorker
                 throw new \UnexpectedValueException("Socket error: closed");
             }
         }
+
+        return null;
     }
     
     private function _select(&$read, &$except)
@@ -271,5 +309,35 @@ class EvalWorker
         }
         
         return $input;
+    }
+
+    private function _sendDeclaredStuff($socket, $baseVars, $get_defined_vars)
+    {
+        $declaredStuff = [
+            self::D_VARS => [],
+            self::D_CLASSES => []
+        ];
+
+        foreach(array_merge($GLOBALS, $get_defined_vars) as $name => $var) {
+
+            if(isset($baseVars[$name]) || isset(self::INTERNAL_VARS[$name])) continue;
+
+            $type = gettype($var);
+
+            $declaredStuff[self::D_VARS][$name] = [
+                self::D_VARS_TYPE => $type
+            ];
+            if(is_object($var)) {
+                $declaredStuff[self::D_VARS][$name][self::D_VARS_CLASS] = get_class($var);
+            }
+        }
+
+        foreach(array_merge(get_declared_classes(), get_declared_interfaces(), get_declared_traits()) as $cls) {
+            $declaredStuff[self::D_CLASSES][$cls] = true;
+        }
+
+        $declaredStuff[self::D_FUNCTIONS] = get_defined_functions();
+
+        $this->_write($socket, json_encode($declaredStuff)."\n");
     }
 }
