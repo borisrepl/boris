@@ -12,6 +12,23 @@ class EvalWorker
     const EXITED = "\1";
     const FAILED = "\2";
     const READY = "\3";
+
+    const CMD_EVAL = "\0";
+    const CMD_COMPLETE = "\1";
+
+
+    const INTERNAL_VARS = [
+        'baseVars'   => true,
+        '__scope'    => true,
+        'hooks'      => true,
+        '__hook'     => true,
+        '__input'    => true,
+        '__response' => true,
+        '__oldexh'   => true,
+        '__pid'      => true,
+        '__result'   => true,
+        '__hasError' => true,
+    ];
     
     private $_socket;
     private $_exports = array();
@@ -22,7 +39,7 @@ class EvalWorker
     private $_cancelled;
     private $_inspector;
     private $_userExceptionHandler;
-    
+
     /**
      * Create a new worker using the given socket for communication.
      *
@@ -89,11 +106,11 @@ class EvalWorker
      */
     public function start()
     {
+
         $__scope = $this->_runHooks($this->_startHooks);
         extract($__scope);
         
         $this->_write($this->_socket, self::READY);
-        
         /* Note the naming of the local variables due to shared scope with the user here */
         for (;;) {
             declare (ticks = 1);
@@ -102,7 +119,24 @@ class EvalWorker
             
             $this->_cancelled = false;
             
-            $__input = $this->_transform($this->_read($this->_socket));
+            list($cmd, $data) = $this->_read($this->_socket);
+
+            if($cmd == self::CMD_COMPLETE) {
+                $vars = array_filter(
+                    get_defined_vars(),
+                    function($var) {
+                        return !isset(EvalWorker::INTERNAL_VARS[$var]);
+                    },
+                    ARRAY_FILTER_USE_KEY);
+                $this->_write(
+                    $this->_socket,
+                    json_encode($this->_complete($vars, $data)));
+                continue;
+            } else if($cmd != self::CMD_EVAL) {
+                //ignore unknown commands
+                continue;
+            }
+            $__input = $this->_transform($data);
             
             if ($__input === null) {
                 continue;
@@ -148,8 +182,19 @@ class EvalWorker
                 // undo ctrl-c signal handling ready for user code execution
                 pcntl_signal(SIGINT, SIG_DFL, true);
                 $__pid = posix_getpid();
-                
-                $__result = eval($__input);
+
+                $__result = null;
+                $__hasError = false;
+                try {
+                    $__result = eval($__input);
+                } catch(\Throwable $t) {
+                    $__hasError = true;
+                    while($t) {
+                        fwrite(STDERR,  $t->getMessage().PHP_EOL);
+                        fwrite(STDERR,  $t->getTraceAsString().PHP_EOL);
+                        $t = $t->getPrevious();
+                    }
+                }
                 
                 if (posix_getpid() != $__pid) {
                     // whatever the user entered caused a forked child
@@ -157,7 +202,7 @@ class EvalWorker
                     exit(0);
                 }
                 
-                if (preg_match('/\s*return\b/i', $__input)) {
+                if (!$__hasError && preg_match('/\s*return\b/i', $__input)) {
                     fwrite(STDOUT, sprintf("%s\n", $this->_inspector->inspect($__result)));
                 }
                 $this->_expungeOldWorker();
@@ -237,11 +282,14 @@ class EvalWorker
         
         if ($this->_select($read, $except) > 0) {
             if ($read) {
-                return stream_get_contents($read[0]);
+                $cmd = stream_get_contents($read[0], 1);
+                return [$cmd, stream_get_contents($read[0])];
             } else if ($except) {
                 throw new \UnexpectedValueException("Socket error: closed");
             }
         }
+
+        return [null, null];
     }
     
     private function _select(&$read, &$except)
@@ -271,5 +319,105 @@ class EvalWorker
         }
         
         return $input;
+    }
+
+    private function _complete($declaredStuff, $input) {
+        // Accessing a class method or property
+        if(preg_match('/\$([a-zA-Z0-9_]+)\->[a-zA-Z0-9_]*$/', $input, $m)) {
+            $var = $m[1];
+            $varValue = null;
+
+            if(isset($declaredStuff[$var])) {
+                $varValue = $declaredStuff[$var];
+            } else if(isset($GLOBALS[$var])) {
+                $varValue = $GLOBALS[$var];
+            }
+
+            if($varValue !== null && is_object($varValue)) {
+                $refl = new \ReflectionClass($varValue);
+                $methods = $refl->getMethods(\ReflectionMethod::IS_PUBLIC);
+                foreach($methods as $method) {
+                    if($method->name != '__construct') {
+                        $return[] = $method->name . '(';
+                    }
+                }
+                $properties = $refl->getProperties(\ReflectionProperty::IS_PUBLIC);
+                foreach($properties as $property) {
+                    $return[] = $property->name;
+                }
+            }
+        } // Are we trying to auto complete a static class method, constant or property?
+        else if(preg_match('/\$?([a-zA-Z0-9_\\\\]+)::(\$?)([a-zA-Z0-9_])*$/', $input, $m)) {
+            $class = $m[1];
+            $refl = null;
+
+            if(class_exists($class)) {
+                $refl = new \ReflectionClass($class);
+            } else if(isset($GLOBALS[$class]) && is_object($GLOBALS[$class])) {
+                $refl = new \ReflectionClass($GLOBALS[$class]);
+            }
+            if(!is_null($refl)) {
+                $exploded = explode('\\', $class);
+                $class = array_pop($exploded);
+                if(empty($m[2])) {
+                    $methods = $refl->getMethods(\ReflectionMethod::IS_STATIC);
+                    foreach($methods as $method) {
+                        if($method->isPublic()) {
+                            $return[] = $class . '::' . $method->name . '(';
+                        }
+                    }
+                    $constants = $refl->getConstants();
+                    foreach($constants as $constant => $value) {
+                        $return[] = $class . '::' . $constant;
+                    }
+                    $return[] = $class.'::class';
+                }
+                if(!empty($m[2]) || empty($m[3])) {
+                    $properties = $refl->getProperties(\ReflectionProperty::IS_STATIC);
+                    foreach($properties as $property) {
+                        if($property->isPublic()) {
+                            $return[] = $class . '::$' . $property->name;
+                        }
+                    }
+                }
+            }
+        } else if(preg_match('/\\\\([a-zA-Z0-9_\\\\]+)$/', $input, $m)) {
+            $match = $m[1];
+            $exploded = explode('\\', $match);
+            $lastComponentIndex = count($exploded) - 1;
+            if($lastComponentIndex == -1) {
+                return false;
+            }
+            $comp = [];
+            foreach(get_declared_classes() as $cl) {
+                if(strncmp($match, $cl, strlen($match)) == 0) {
+                    $clExploded = explode('\\', $cl);
+                    array_splice($clExploded, 0, $lastComponentIndex);
+                    $comp[implode('\\', $clExploded)] = true;
+                }
+            }
+
+            $return = array_keys($comp);
+
+        } else if(preg_match('/\'[^\']*$/', $input) || preg_match('/"[^"]*$/', $input)) {
+            return false; // This makes readline auto-complete files
+        } else if(preg_match('/\$[a-zA-Z0-9_]*$/', $input)) {
+            $return = array_merge(array_keys($declaredStuff), array_keys($GLOBALS));
+        } else {
+            $functions = get_defined_functions();
+            $classes = get_declared_classes();
+            $functions['internal'] = array_map(function($v) {
+                return $v . '(';
+            }, $functions['internal']);
+
+            $functions['user'] = array_map(function($v) {
+                return $v . '(';
+            }, $functions['user']);
+            $return = array_merge($classes, $functions['user'], $functions['internal'], array('require ', 'echo '));
+        }
+        if(empty($return)) {
+            return array('');
+        }
+        return $return;
     }
 }

@@ -10,10 +10,8 @@ namespace Boris;
 class ReadlineClient
 {
     private $_socket;
-    private $_prompt;
-    private $_historyFile;
     private $_clear = false;
-    
+
     /**
      * Create a new ReadlineClient using $socket for communication.
      *
@@ -42,12 +40,14 @@ class ReadlineClient
             $this,
             'clear'
         ), true);
+
+        readline_completion_function([$this, 'readlineCompletionFunction']);
         
         // wait for the worker to finish executing hooks
         if (fread($this->_socket, 1) != EvalWorker::READY) {
             throw new \RuntimeException('EvalWorker failed to start');
         }
-        
+
         $parser = new ShallowParser();
         $buf    = '';
         $lineno = 1;
@@ -55,7 +55,7 @@ class ReadlineClient
         for (;;) {
             $this->_clear = false;
             $line         = readline(sprintf('[%d] %s', $lineno, ($buf == '' ? $prompt : str_pad('*> ', strlen($prompt), ' ', STR_PAD_LEFT))));
-            
+
             if ($this->_clear) {
                 $buf = '';
                 continue;
@@ -76,7 +76,7 @@ class ReadlineClient
                 
                 $buf = '';
                 foreach ($statements as $stmt) {
-                    if (false === $written = fwrite($this->_socket, $stmt)) {
+                    if (false === $written = fwrite($this->_socket, EvalWorker::CMD_EVAL.$stmt)) {
                         throw new \RuntimeException('Socket error: failed to write data');
                     }
                     
@@ -102,5 +102,33 @@ class ReadlineClient
     {
         // FIXME: I'd love to have this send \r to readline so it puts the user on a blank line
         $this->_clear = true;
+    }
+
+    public function readlineCompletionFunction() {
+        // Get the full input buffer so we can use some context when suggesting things.
+        $info = readline_info();
+        $input = substr($info['line_buffer'], 0, $info['end']);
+        if (false === $written = fwrite($this->_socket, EvalWorker::CMD_COMPLETE.$input)) {
+            throw new \RuntimeException('Socket error: failed to write data');
+        }
+
+        $read   = [$this->_socket];
+        $write  = null;
+        $except = [$this->_socket];
+
+        if(stream_select($read, $write, $except, 10) > 0 ) {
+            if($read) {
+                try {
+                    stream_set_blocking($read[0], false);
+                    $data = json_decode(stream_get_contents($read[0]), true);
+                } finally {
+                    stream_set_blocking($read[0], true);
+                }
+                return $data;
+            }
+        }
+
+        return [''];
+
     }
 }
