@@ -13,6 +13,10 @@ class EvalWorker
     const FAILED = "\2";
     const READY = "\3";
 
+    const CMD_EVAL = "\0";
+    const CMD_COMPLETE = "\1";
+
+
     const D_VARS       = 'vars';
     const D_VARS_TYPE  = 'type';
     const D_VARS_CLASS = 'class';
@@ -108,13 +112,11 @@ class EvalWorker
      */
     public function start()
     {
-        $baseVars = get_defined_vars();
 
         $__scope = $this->_runHooks($this->_startHooks);
         extract($__scope);
         
         $this->_write($this->_socket, self::READY);
-        $this->_sendDeclaredStuff($this->_socket, $baseVars, get_defined_vars());
         /* Note the naming of the local variables due to shared scope with the user here */
         for (;;) {
             declare (ticks = 1);
@@ -123,7 +125,24 @@ class EvalWorker
             
             $this->_cancelled = false;
             
-            $__input = $this->_transform($this->_read($this->_socket));
+            list($cmd, $data) = $this->_read($this->_socket);
+
+            if($cmd == self::CMD_COMPLETE) {
+                $vars = array_filter(
+                    get_defined_vars(),
+                    function($var) {
+                        return !isset(EvalWorker::INTERNAL_VARS[$var]);
+                    },
+                    ARRAY_FILTER_USE_KEY);
+                $this->_write(
+                    $this->_socket,
+                    json_encode($this->_complete($vars, $data)));
+                continue;
+            } else if($cmd != self::CMD_EVAL) {
+                //ignore unknown commands
+                continue;
+            }
+            $__input = $this->_transform($data);
             
             if ($__input === null) {
                 continue;
@@ -200,10 +219,6 @@ class EvalWorker
             if ($__response == self::EXITED) {
                 exit(0);
             }
-            if($__response == self::DONE) {
-                $this->_sendDeclaredStuff($this->_socket, $baseVars, get_defined_vars());
-            }
-
         }
     }
     
@@ -273,13 +288,14 @@ class EvalWorker
         
         if ($this->_select($read, $except) > 0) {
             if ($read) {
-                return stream_get_contents($read[0]);
+                $cmd = stream_get_contents($read[0], 1);
+                return [$cmd, stream_get_contents($read[0])];
             } else if ($except) {
                 throw new \UnexpectedValueException("Socket error: closed");
             }
         }
 
-        return null;
+        return [null, null];
     }
     
     private function _select(&$read, &$except)
@@ -311,33 +327,103 @@ class EvalWorker
         return $input;
     }
 
-    private function _sendDeclaredStuff($socket, $baseVars, $get_defined_vars)
-    {
-        $declaredStuff = [
-            self::D_VARS => [],
-            self::D_CLASSES => []
-        ];
+    private function _complete($declaredStuff, $input) {
+        // Accessing a class method or property
+        if(preg_match('/\$([a-zA-Z0-9_]+)\->[a-zA-Z0-9_]*$/', $input, $m)) {
+            $var = $m[1];
+            $varValue = null;
 
-        foreach(array_merge($GLOBALS, $get_defined_vars) as $name => $var) {
-
-            if(isset($baseVars[$name]) || isset(self::INTERNAL_VARS[$name])) continue;
-
-            $type = gettype($var);
-
-            $declaredStuff[self::D_VARS][$name] = [
-                self::D_VARS_TYPE => $type
-            ];
-            if(is_object($var)) {
-                $declaredStuff[self::D_VARS][$name][self::D_VARS_CLASS] = get_class($var);
+            if(isset($declaredStuff[$var])) {
+                $varValue = $declaredStuff[$var];
+            } else if(isset($GLOBALS[$var])) {
+                $varValue = $GLOBALS[$var];
             }
+
+            if($varValue !== null && is_object($varValue)) {
+                $refl = new \ReflectionClass($varValue);
+                $methods = $refl->getMethods(\ReflectionMethod::IS_PUBLIC);
+                foreach($methods as $method) {
+                    if($method->name != '__construct') {
+                        $return[] = $method->name . '(';
+                    }
+                }
+                $properties = $refl->getProperties(\ReflectionProperty::IS_PUBLIC);
+                foreach($properties as $property) {
+                    $return[] = $property->name;
+                }
+            }
+        } // Are we trying to auto complete a static class method, constant or property?
+        else if(preg_match('/\$?([a-zA-Z0-9_\\\\]+)::(\$?)([a-zA-Z0-9_])*$/', $input, $m)) {
+            $class = $m[1];
+            $refl = null;
+
+            if(class_exists($class)) {
+                $refl = new \ReflectionClass($class);
+            } else if(isset($GLOBALS[$class]) && is_object($GLOBALS[$class])) {
+                $refl = new \ReflectionClass($GLOBALS[$class]);
+            }
+            if(!is_null($refl)) {
+                $exploded = explode('\\', $class);
+                $class = array_pop($exploded);
+                if(empty($m[2])) {
+                    $methods = $refl->getMethods(\ReflectionMethod::IS_STATIC);
+                    foreach($methods as $method) {
+                        if($method->isPublic()) {
+                            $return[] = $class . '::' . $method->name . '(';
+                        }
+                    }
+                    $constants = $refl->getConstants();
+                    foreach($constants as $constant => $value) {
+                        $return[] = $class . '::' . $constant;
+                    }
+                    $return[] = $class.'::class';
+                }
+                if(!empty($m[2]) || empty($m[3])) {
+                    $properties = $refl->getProperties(\ReflectionProperty::IS_STATIC);
+                    foreach($properties as $property) {
+                        if($property->isPublic()) {
+                            $return[] = $class . '::$' . $property->name;
+                        }
+                    }
+                }
+            }
+        } else if(preg_match('/\\\\([a-zA-Z0-9_\\\\]+)$/', $input, $m)) {
+            $match = $m[1];
+            $exploded = explode('\\', $match);
+            $lastComponentIndex = count($exploded) - 1;
+            if($lastComponentIndex == -1) {
+                return false;
+            }
+            $comp = [];
+            foreach(get_declared_classes() as $cl) {
+                if(strncmp($match, $cl, strlen($match)) == 0) {
+                    $clExploded = explode('\\', $cl);
+                    array_splice($clExploded, 0, $lastComponentIndex);
+                    $comp[implode('\\', $clExploded)] = true;
+                }
+            }
+
+            $return = array_keys($comp);
+
+        } else if(preg_match('/\'[^\']*$/', $input) || preg_match('/"[^"]*$/', $input)) {
+            return false; // This makes readline auto-complete files
+        } else if(preg_match('/\$[a-zA-Z0-9_]*$/', $input)) {
+            $return = array_merge(array_keys($declaredStuff), array_keys($GLOBALS));
+        } else {
+            $functions = get_defined_functions();
+            $classes = get_declared_classes();
+            $functions['internal'] = array_map(function($v) {
+                return $v . '(';
+            }, $functions['internal']);
+
+            $functions['user'] = array_map(function($v) {
+                return $v . '(';
+            }, $functions['user']);
+            $return = array_merge($classes, $functions['user'], $functions['internal'], array('require ', 'echo '));
         }
-
-        foreach(array_merge(get_declared_classes(), get_declared_interfaces(), get_declared_traits()) as $cls) {
-            $declaredStuff[self::D_CLASSES][$cls] = true;
+        if(empty($return)) {
+            return array('');
         }
-
-        $declaredStuff[self::D_FUNCTIONS] = get_defined_functions();
-
-        $this->_write($socket, json_encode($declaredStuff)."\n");
+        return $return;
     }
 }

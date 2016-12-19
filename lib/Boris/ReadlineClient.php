@@ -10,19 +10,8 @@ namespace Boris;
 class ReadlineClient
 {
     private $_socket;
-    private $_prompt;
-    private $_historyFile;
     private $_clear = false;
 
-    private $_vars = [
-        EvalWorker::D_VARS      => [],
-        EvalWorker::D_CLASSES   => [],
-        EvalWorker::D_FUNCTIONS => [
-            'internal' => [],
-            'user'     => []
-        ]
-    ];
-    
     /**
      * Create a new ReadlineClient using $socket for communication.
      *
@@ -52,15 +41,13 @@ class ReadlineClient
             'clear'
         ), true);
 
-        readline_completion_function($this->_getReadlineCompletionFunction($this->_vars));
+        readline_completion_function([$this, 'readlineCompletionFunction']);
         
         // wait for the worker to finish executing hooks
         if (fread($this->_socket, 1) != EvalWorker::READY) {
             throw new \RuntimeException('EvalWorker failed to start');
         }
 
-        $this->_readVars();
-        
         $parser = new ShallowParser();
         $buf    = '';
         $lineno = 1;
@@ -89,7 +76,7 @@ class ReadlineClient
                 
                 $buf = '';
                 foreach ($statements as $stmt) {
-                    if (false === $written = fwrite($this->_socket, $stmt)) {
+                    if (false === $written = fwrite($this->_socket, EvalWorker::CMD_EVAL.$stmt)) {
                         throw new \RuntimeException('Socket error: failed to write data');
                     }
                     
@@ -101,8 +88,6 @@ class ReadlineClient
                             exit(0);
                         } elseif ($status == EvalWorker::FAILED) {
                             break;
-                        } elseif($status == EvalWorker::DONE) {
-                            $this->_readVars();
                         }
                     }
                 }
@@ -119,118 +104,52 @@ class ReadlineClient
         $this->_clear = true;
     }
 
-    private function _readVars() {
-        $vars = "";
-        while(true) {
-            $tmp = fread($this->_socket, 1);
-            if($tmp === false || $tmp == "\n") {
-                break;
-            }
-            $vars .= $tmp;
+    public function readlineCompletionFunction() {
+        // Get the full input buffer so we can use some context when suggesting things.
+        $info = readline_info();
+        $input = substr($info['line_buffer'], 0, $info['end']);
+        if (false === $written = fwrite($this->_socket, EvalWorker::CMD_COMPLETE.$input)) {
+            throw new \RuntimeException('Socket error: failed to write data');
         }
-        $this->_vars = json_decode($vars, true);
+
+        $read   = [$this->_socket];
+        $write  = null;
+        $except = [$this->_socket];
+
+        if(stream_select($read, $write, $except, 10) > 0 ) {
+            if($read) {
+                try {
+                    stream_set_blocking($read[0], false);
+                    $data = json_decode(stream_get_contents($read[0]), true);
+                } finally {
+                    stream_set_blocking($read[0], true);
+                }
+                return $data;
+            }
+        }
+
+        return [''];
+
     }
 
+    private function _read($socket)
+    {
+        $read   = array(
+            $socket
+        );
+        $except = array(
+            $socket
+        );
 
-    private function _getReadlineCompletionFunction(&$local) {
-        return function() use (&$local) {
-            // Get the full input buffer so we can use some context when suggesting things.
-            $info = readline_info();
-            $input = substr($info['line_buffer'], 0, $info['end']);
-            $return = array();
-            // Accessing a class method or property
-            if(preg_match('/\$([a-zA-Z0-9_]+)\->[a-zA-Z0-9_]*$/', $input, $m)) {
-                $var = $m[1];
-                $varValue = null;
-
-                if(isset($local[EvalWorker::D_VARS][$var])) {
-                    $varValue = $local[EvalWorker::D_VARS][$var];
-                }
-
-                if($varValue !== null && $varValue[EvalWorker::D_VARS_TYPE] == 'object') {
-                    $refl = new \ReflectionClass($varValue[EvalWorker::D_VARS_CLASS]);
-                    $methods = $refl->getMethods(\ReflectionMethod::IS_PUBLIC);
-                    foreach($methods as $method) {
-                        $return[] = $method->name . '(';
-                    }
-                    $properties = $refl->getProperties(\ReflectionProperty::IS_PUBLIC);
-                    foreach($properties as $property) {
-                        $return[] = $property->name;
-                    }
-                }
-            } // Are we trying to auto complete a static class method, constant or property?
-            else if(preg_match('/\$?([a-zA-Z0-9_\\\\]+)::(\$?)([a-zA-Z0-9_])*$/', $input, $m)) {
-                $class = $m[1];
-                $refl = null;
-
-                if(class_exists($class)) {
-                    $refl = new \ReflectionClass($class);
-                } else if(isset($GLOBALS[$class]) && is_object($GLOBALS[$class])) {
-                    $refl = new \ReflectionClass($GLOBALS[$class]);
-                }
-                if(!is_null($refl)) {
-                    $exploded = explode('\\', $class);
-                    $class = array_pop($exploded);
-                    if(empty($m[2])) {
-                        $methods = $refl->getMethods(\ReflectionMethod::IS_STATIC);
-                        foreach($methods as $method) {
-                            if($method->isPublic()) {
-                                $return[] = $class . '::' . $method->name . '(';
-                            }
-                        }
-                        $constants = $refl->getConstants();
-                        foreach($constants as $constant => $value) {
-                            $return[] = $class . '::' . $constant;
-                        }
-                        $return[] = $class.'::class';
-                    }
-                    if(!empty($m[2]) || empty($m[3])) {
-                        $properties = $refl->getProperties(\ReflectionProperty::IS_STATIC);
-                        foreach($properties as $property) {
-                            if($property->isPublic()) {
-                                $return[] = $class . '::$' . $property->name;
-                            }
-                        }
-                    }
-                }
-            } else if(preg_match('/\\\\([a-zA-Z0-9_\\\\]+)$/', $input, $m)) {
-                $match = $m[1];
-                $exploded = explode('\\', $match);
-                $lastComponentIndex = count($exploded) - 1;
-                if($lastComponentIndex == -1) {
-                    return false;
-                }
-                $comp = [];
-                foreach(array_keys($this->_vars[EvalWorker::D_CLASSES]) as $cl) {
-                    if(strncmp($match, $cl, strlen($match)) == 0) {
-                        $clExploded = explode('\\', $cl);
-                        array_splice($clExploded, 0, $lastComponentIndex);
-                        $comp[implode('\\', $clExploded)] = true;
-                    }
-                }
-
-                $return = array_keys($comp);
-
-            } else if(preg_match('/\'[^\']*$/', $input) || preg_match('/"[^"]*$/', $input)) {
-                return false; // This makes readline auto-complete files
-            } else if(preg_match('/\$[a-zA-Z0-9_]*$/', $input)) {
-                $return = array_keys($local[EvalWorker::D_VARS]);
-            } else {
-                $functions = $local[EvalWorker::D_FUNCTIONS];
-                $classes = $local[EvalWorker::D_CLASSES];
-                $functions['internal'] = array_map(function($v) {
-                    return $v . '(';
-                }, $functions['internal']);
-
-                $functions['user'] = array_map(function($v) {
-                    return $v . '(';
-                }, $functions['user']);
-                $return = array_merge($return, $classes, $functions['user'], $functions['internal'], array('require ', 'echo '));
+        if ($this->_select($read, $except) > 0) {
+            if ($read) {
+                $cmd = stream_get_contents($read[0], 1);
+                return [$cmd, stream_get_contents($read[0])];
+            } else if ($except) {
+                throw new \UnexpectedValueException("Socket error: closed");
             }
-            if(empty($return)) {
-                return array('');
-            }
-            return $return;
-        };
+        }
+
+        return [null, null];
     }
 }
