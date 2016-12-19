@@ -17,12 +17,6 @@ class EvalWorker
     const CMD_COMPLETE = "\1";
 
 
-    const D_VARS       = 'vars';
-    const D_VARS_TYPE  = 'type';
-    const D_VARS_CLASS = 'class';
-    const D_CLASSES    = 'classes';
-    const D_FUNCTIONS  = 'functions';
-
     const INTERNAL_VARS = [
         'baseVars'   => true,
         '__scope'    => true,
