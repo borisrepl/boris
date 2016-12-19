@@ -131,25 +131,4 @@ class ReadlineClient
         return [''];
 
     }
-
-    private function _read($socket)
-    {
-        $read   = array(
-            $socket
-        );
-        $except = array(
-            $socket
-        );
-
-        if ($this->_select($read, $except) > 0) {
-            if ($read) {
-                $cmd = stream_get_contents($read[0], 1);
-                return [$cmd, stream_get_contents($read[0])];
-            } else if ($except) {
-                throw new \UnexpectedValueException("Socket error: closed");
-            }
-        }
-
-        return [null, null];
-    }
 }
