@@ -1,3 +1,10 @@
+This is a fork of [borisrepl/boris](https://github.com/borisrepl/boris).
+This fork introduces the `--autoload` option (shothand `-a`) to Boris.
+This option makes Boris automatically detect if you are in a composer project and
+automatically load the classes of the project using the `autoload.php` script.
+
+<hr/>
+
 # Boris
 
 A tiny, but robust REPL for PHP.
